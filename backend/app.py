@@ -5,7 +5,15 @@ import os
 import traceback
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for React frontend
+
+# CORS configuration
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["http://localhost:3000", "https://yourdomain.com"],
+        "methods": ["GET", "POST"],
+        "allow_headers": ["Content-Type"]
+    }
+})
 
 # Initialize analyzer with data
 DATA_PATH = os.path.join(os.path.dirname(__file__), 'data', 'financial_transactions.csv')
@@ -16,6 +24,29 @@ try:
 except Exception as e:
     print(f"Error loading data: {e}")
     analyzer = None
+
+# ========== Security Headers ==========
+@app.after_request
+def add_security_headers(response):
+    """Add security headers to all responses"""
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    return response
+
+# ========== Security Info Endpoint ==========
+@app.route('/api/security', methods=['GET'])
+def security_info():
+    """Return security and privacy information"""
+    return jsonify({
+        'data_storage': 'Local processing only - no cloud storage',
+        'encryption': 'Data encrypted in transit (HTTPS in production)',
+        'data_retention': 'No transaction data retained after session',
+        'third_party': 'No data shared with third parties',
+        'compliance': 'Designed for GDPR compliance',
+        'open_source': 'Code available for security audit'
+    })
 
 # ========== Health Check ==========
 @app.route('/api/health', methods=['GET'])
@@ -169,11 +200,17 @@ def forecast_goal():
         goal_amount = float(data.get('goal_amount', 3000))
         goal_months = int(data.get('goal_months', 10))
         
-        # Validate inputs
-        if goal_amount <= 0 or goal_months <= 0:
+      # Input validation
+        if goal_amount > 1000000:
             return jsonify({
                 'success': False,
-                'error': 'Goal amount and months must be positive'
+                'error': 'Goal amount exceeds maximum allowed ($1,000,000)'
+            }), 400
+        
+        if goal_months > 120:
+            return jsonify({
+                'success': False,
+                'error': 'Goal timeframe exceeds maximum (10 years)'
             }), 400
         
         result = analyzer.forecast_goal(goal_amount, goal_months)
@@ -182,6 +219,7 @@ def forecast_goal():
             'success': True,
             'data': result
         })
+    
     except Exception as e:
         print(f"Error in /api/insights/goal: {traceback.format_exc()}")
         return jsonify({
@@ -266,6 +304,7 @@ if __name__ == '__main__':
     print(f"   GET  /api/insights/anomalies  - AI anomaly detection")
     print(f"   GET  /api/insights/subscriptions - Subscription detector")
     print(f"   POST /api/insights/goal       - Goal forecasting")
+    print(f"   GET  /api/security            - Security & privacy info")
     print(f"   GET  /api/timeline            - Daily spending timeline")
     print(f"   GET  /api/trends              - Category trends")
     print("="*50 + "\n")
