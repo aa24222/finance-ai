@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from analysis_engine import FinancialAnalyzer
+from werkzeug.utils import secure_filename
 import os
 import traceback
 
@@ -9,21 +10,49 @@ app = Flask(__name__)
 # CORS configuration
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["http://localhost:3000", "https://yourdomain.com"],
-        "methods": ["GET", "POST"],
+        "origins": ["http://localhost:3000", "http://localhost:5173", "https://yourdomain.com"],
+        "methods": ["GET", "POST", "DELETE"],
         "allow_headers": ["Content-Type"]
     }
 })
 
-# Initialize analyzer with data
-DATA_PATH = os.path.join(os.path.dirname(__file__), 'data', 'financial_transactions.csv')
+# ========== Configuration ==========
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
+DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'data')
+DEMO_DATA_PATH = os.path.join(DATA_FOLDER, 'financial_transactions.csv')
+ALLOWED_EXTENSIONS = {'csv'}
+MAX_FILE_SIZE = 16 * 1024 * 1024  # 16MB
 
-try:
-    analyzer = FinancialAnalyzer(DATA_PATH)
-    print(f"Loaded financial data from {DATA_PATH}")
-except Exception as e:
-    print(f"Error loading data: {e}")
-    analyzer = None
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
+
+# Ensure upload folder exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Global state
+analyzer = None
+current_data_source = 'demo'
+current_file_name = 'financial_transactions.csv'
+
+def allowed_file(filename):
+    """Check if file extension is allowed"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def load_analyzer(file_path, source_name='demo', file_name=None):
+    """Load or reload the analyzer with new data"""
+    global analyzer, current_data_source, current_file_name
+    try:
+        analyzer = FinancialAnalyzer(file_path)
+        current_data_source = source_name
+        current_file_name = file_name or os.path.basename(file_path)
+        print(f"✓ Loaded data from: {file_path}")
+        return True
+    except Exception as e:
+        print(f"✗ Error loading data: {e}")
+        return False
+
+# Initialize with demo data on startup
+load_analyzer(DEMO_DATA_PATH, 'demo', 'financial_transactions.csv')
 
 # ========== Security Headers ==========
 @app.after_request
@@ -34,6 +63,172 @@ def add_security_headers(response):
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     return response
+
+# ========== CSV Upload Endpoints ==========
+@app.route('/api/data/upload', methods=['POST'])
+def upload_csv():
+    """
+    Upload a CSV file to use as the data source
+    Expected CSV columns: date, merchant, category, amount, type
+    """
+    global analyzer
+    
+    try:
+        # Check if file was included in request
+        if 'file' not in request.files:
+            return jsonify({
+                'success': False,
+                'error': 'No file provided. Please include a CSV file.'
+            }), 400
+        
+        file = request.files['file']
+        
+        # Check if a file was selected
+        if file.filename == '':
+            return jsonify({
+                'success': False,
+                'error': 'No file selected'
+            }), 400
+        
+        # Validate file extension
+        if not allowed_file(file.filename):
+            return jsonify({
+                'success': False,
+                'error': 'Invalid file type. Only CSV files are allowed.'
+            }), 400
+        
+        # Secure the filename and save
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(file_path)
+        
+        # Validate CSV structure before loading
+        import pandas as pd
+        try:
+            df = pd.read_csv(file_path)
+            required_columns = {'date', 'merchant', 'category', 'amount', 'type'}
+            missing_columns = required_columns - set(df.columns.str.lower())
+            
+            if missing_columns:
+                os.remove(file_path)  # Clean up invalid file
+                return jsonify({
+                    'success': False,
+                    'error': f'Missing required columns: {", ".join(missing_columns)}',
+                    'required_columns': list(required_columns),
+                    'your_columns': list(df.columns)
+                }), 400
+            
+            # Check if file has data
+            if len(df) == 0:
+                os.remove(file_path)
+                return jsonify({
+                    'success': False,
+                    'error': 'CSV file is empty'
+                }), 400
+                
+        except Exception as e:
+            os.remove(file_path)
+            return jsonify({
+                'success': False,
+                'error': f'Invalid CSV format: {str(e)}'
+            }), 400
+        
+        # Load the new data into analyzer
+        if load_analyzer(file_path, 'uploaded', filename):
+            return jsonify({
+                'success': True,
+                'message': f'Successfully loaded {filename}',
+                'data_source': 'uploaded',
+                'file_name': filename,
+                'row_count': len(df)
+            })
+        else:
+            os.remove(file_path)
+            return jsonify({
+                'success': False,
+                'error': 'Failed to process the CSV file'
+            }), 500
+            
+    except Exception as e:
+        print(f"Error in /api/data/upload: {traceback.format_exc()}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/data/reset', methods=['POST'])
+def reset_to_demo():
+    """Reset to using demo data"""
+    try:
+        if load_analyzer(DEMO_DATA_PATH, 'demo', 'financial_transactions.csv'):
+            return jsonify({
+                'success': True,
+                'message': 'Reset to demo data',
+                'data_source': 'demo',
+                'file_name': 'financial_transactions.csv'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to load demo data'
+            }), 500
+    except Exception as e:
+        print(f"Error in /api/data/reset: {traceback.format_exc()}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/data/status', methods=['GET'])
+def data_status():
+    """Get current data source status"""
+    try:
+        if analyzer is None:
+            return jsonify({
+                'success': True,
+                'data_loaded': False,
+                'data_source': None,
+                'file_name': None
+            })
+        
+        stats = analyzer.get_summary_stats()
+        
+        return jsonify({
+            'success': True,
+            'data_loaded': True,
+            'data_source': current_data_source,
+            'file_name': current_file_name,
+            'row_count': stats['date_range']['days'],
+            'date_range': stats['date_range']
+        })
+    except Exception as e:
+        print(f"Error in /api/data/status: {traceback.format_exc()}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/data/template', methods=['GET'])
+def get_csv_template():
+    """Return the expected CSV format"""
+    return jsonify({
+        'success': True,
+        'required_columns': ['date', 'merchant', 'category', 'amount', 'type'],
+        'column_descriptions': {
+            'date': 'Transaction date (YYYY-MM-DD format)',
+            'merchant': 'Name of the merchant/store',
+            'category': 'Spending category (e.g., Food & Dining, Shopping, etc.)',
+            'amount': 'Transaction amount (negative for expenses, positive for income)',
+            'type': 'Transaction type: "debit" for expenses, "credit" for income'
+        },
+        'example_row': {
+            'date': '2024-01-15',
+            'merchant': 'Starbucks',
+            'category': 'Food & Dining',
+            'amount': -5.75,
+            'type': 'debit'
+        }
+    })
 
 # ========== Security Info Endpoint ==========
 @app.route('/api/security', methods=['GET'])
@@ -60,7 +255,8 @@ def health_check():
     
     return jsonify({
         'status': 'ok',
-        'message': 'Smart Financial Coach API is running'
+        'message': 'Smart Financial Coach API is running',
+        'data_source': current_data_source
     })
 
 # ========== Dashboard Summary ==========
@@ -77,7 +273,8 @@ def get_summary():
         return jsonify({
             'success': True,
             'stats': stats,
-            'categories': categories
+            'categories': categories,
+            'data_source': current_data_source
         })
     except Exception as e:
         print(f"Error in /api/summary: {traceback.format_exc()}")
@@ -200,7 +397,7 @@ def forecast_goal():
         goal_amount = float(data.get('goal_amount', 3000))
         goal_months = int(data.get('goal_months', 10))
         
-      # Input validation
+        # Input validation
         if goal_amount > 1000000:
             return jsonify({
                 'success': False,
@@ -292,21 +489,27 @@ def internal_error(error):
 
 # ========== Main ==========
 if __name__ == '__main__':
-    print("\n" + "="*50)
-    print("Smart Financial Coach API Starting...")
-    print("="*50)
-    print(f"Data file: {DATA_PATH}")
-    print(f"API running on: http://localhost:5000")
-    print(f"API Documentation:")
-    print(f"   GET  /api/health              - Health check")
-    print(f"   GET  /api/summary             - Financial summary")
-    print(f"   GET  /api/insights/spending   - Spending habits analysis")
-    print(f"   GET  /api/insights/anomalies  - AI anomaly detection")
+    print("\n" + "="*60)
+    print(" Smart Financial Coach API Starting...")
+    print("="*60)
+    print(f"📁 Demo data: {DEMO_DATA_PATH}")
+    print(f"📂 Upload folder: {UPLOAD_FOLDER}")
+    print(f"🌐 API running on: http://localhost:5000")
+    print(f"\n📋 API Endpoints:")
+    print(f"   GET  /api/health                 - Health check")
+    print(f"   GET  /api/summary                - Financial summary")
+    print(f"   GET  /api/insights/spending      - Spending habits analysis")
+    print(f"   GET  /api/insights/anomalies     - AI anomaly detection")
     print(f"   GET  /api/insights/subscriptions - Subscription detector")
-    print(f"   POST /api/insights/goal       - Goal forecasting")
-    print(f"   GET  /api/security            - Security & privacy info")
-    print(f"   GET  /api/timeline            - Daily spending timeline")
-    print(f"   GET  /api/trends              - Category trends")
-    print("="*50 + "\n")
+    print(f"   POST /api/insights/goal          - Goal forecasting")
+    print(f"   GET  /api/security               - Security & privacy info")
+    print(f"   GET  /api/timeline               - Daily spending timeline")
+    print(f"   GET  /api/trends                 - Category trends")
+    print(f"\n📤 Data Upload Endpoints:")
+    print(f"   POST /api/data/upload            - Upload CSV file")
+    print(f"   POST /api/data/reset             - Reset to demo data")
+    print(f"   GET  /api/data/status            - Current data source info")
+    print(f"   GET  /api/data/template          - Get CSV format template")
+    print("="*60 + "\n")
     
     app.run(debug=True, port=5000, host='0.0.0.0')
