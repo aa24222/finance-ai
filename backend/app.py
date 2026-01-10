@@ -87,6 +87,47 @@ def get_spending_insights():
             'error': str(e)
         }), 500
 
+# ========== AI Anomaly Detection ==========
+@app.route('/api/insights/anomalies', methods=['GET'])
+def get_anomalies():
+    """
+    AI-powered anomaly detection using Isolation Forest
+    Returns: Unusual transactions that may indicate fraud, errors, or unexpected charges
+    """
+    try:
+        if analyzer is None:
+            return jsonify({'success': False, 'error': 'Data not loaded'}), 500
+        
+        # Optional: Allow custom contamination rate via query parameter
+        contamination = float(request.args.get('contamination', 0.05))
+        
+        # Validate contamination rate (must be between 0 and 0.5)
+        if contamination <= 0 or contamination > 0.5:
+            return jsonify({
+                'success': False,
+                'error': 'Contamination rate must be between 0 and 0.5'
+            }), 400
+        
+        result = analyzer.detect_anomalies(contamination=contamination)
+        
+        if result is None:
+            return jsonify({
+                'success': True,
+                'found': False,
+                'message': 'Not enough data for anomaly detection'
+            })
+        
+        return jsonify({
+            'success': True,
+            'found': result.get('found', False),
+            'data': result
+        })
+    except Exception as e:
+        print(f"Error in /api/insights/anomalies: {traceback.format_exc()}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 # ========== Subscription Detector (Feature 2) ==========
 @app.route('/api/insights/subscriptions', methods=['GET'])
@@ -222,6 +263,7 @@ if __name__ == '__main__':
     print(f"   GET  /api/health              - Health check")
     print(f"   GET  /api/summary             - Financial summary")
     print(f"   GET  /api/insights/spending   - Spending habits analysis")
+    print(f"   GET  /api/insights/anomalies  - AI anomaly detection")
     print(f"   GET  /api/insights/subscriptions - Subscription detector")
     print(f"   POST /api/insights/goal       - Goal forecasting")
     print(f"   GET  /api/timeline            - Daily spending timeline")
