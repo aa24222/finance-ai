@@ -1,0 +1,429 @@
+transaction_id,date,description,amount,type,category,merchant
+TXN001000,2024-07-15,Netflix Subscription,-15.99,debit,Entertainment,Netflix
+TXN001001,2024-07-15,Starbucks - Coffee,-6.98,debit,Food & Drink,Starbucks
+TXN001002,2024-07-15,Safeway,-50.78,debit,Groceries,Safeway
+TXN001003,2024-07-16,Starbucks - Coffee,-5.69,debit,Food & Drink,Starbucks
+TXN001004,2024-07-16,Walmart,-25.93,debit,Groceries,Walmart
+TXN001005,2024-07-16,Five Guys,-15.61,debit,Dining Out,Five Guys
+TXN001006,2024-07-17,Starbucks - Coffee,-7.02,debit,Food & Drink,Starbucks
+TXN001007,2024-07-17,Target,-36.91,debit,Groceries,Target
+TXN001008,2024-07-17,Shake Shack,-12.69,debit,Dining Out,Shake Shack
+TXN001009,2024-07-17,Shell,-52.18,debit,Transportation,Shell
+TXN001010,2024-07-18,Headspace Premium,-12.99,debit,Health,Headspace
+TXN001011,2024-07-18,Starbucks - Coffee,-6.96,debit,Food & Drink,Starbucks
+TXN001013,2024-07-20,Safeway,-134.11,debit,Groceries,Safeway
+TXN001012,2024-07-20,Amazon Prime Membership,-14.99,debit,Shopping,Amazon Prime Video
+TXN001014,2024-07-21,Trader Joes,-94.67,debit,Groceries,Trader Joes
+TXN001015,2024-07-21,Thai Kitchen,-37.18,debit,Dining Out,Thai Kitchen
+TXN001016,2024-07-21,Sushi Palace,-41.54,debit,Dining Out,Sushi Palace
+TXN001017,2024-07-22,Starbucks - Coffee,-5.96,debit,Food & Drink,Starbucks
+TXN001018,2024-07-22,Trader Joes,-39.04,debit,Groceries,Trader Joes
+TXN001019,2024-07-22,Pizza Hut,-17.01,debit,Dining Out,Pizza Hut
+TXN001020,2024-07-23,Local Cafe - Coffee,-5.79,debit,Food & Drink,Local Cafe
+TXN001021,2024-07-23,Walmart,-43.86,debit,Groceries,Walmart
+TXN001025,2024-07-24,IKEA,-131.3,debit,Shopping,IKEA
+TXN001022,2024-07-24,Blue Bottle Coffee - Coffee,-6.52,debit,Food & Drink,Blue Bottle Coffee
+TXN001023,2024-07-24,Whole Foods,-55.14,debit,Groceries,Whole Foods
+TXN001024,2024-07-24,Subway,-16.34,debit,Dining Out,Subway
+TXN001027,2024-07-25,Panera Bread,-10.92,debit,Dining Out,Panera Bread
+TXN001026,2024-07-25,Peets Coffee - Coffee,-7.44,debit,Food & Drink,Peets Coffee
+TXN001028,2024-07-26,Trader Joes,-40.22,debit,Groceries,Trader Joes
+TXN001029,2024-07-27,Walmart,-133.34,debit,Groceries,Walmart
+TXN001030,2024-07-27,Thai Kitchen,-42.41,debit,Dining Out,Thai Kitchen
+TXN001031,2024-07-27,Sushi Palace,-41.11,debit,Dining Out,Sushi Palace
+TXN001032,2024-07-28,Trader Joes,-114.2,debit,Groceries,Trader Joes
+TXN001033,2024-07-28,Five Guys,-42.57,debit,Dining Out,Five Guys
+TXN001034,2024-07-28,Uber Ride,-16.71,debit,Transportation,Uber
+TXN001035,2024-07-28,Amazon Prime Video,-19.49,debit,Entertainment,Amazon Prime Video
+TXN001036,2024-07-29,Dunkin - Coffee,-5.83,debit,Food & Drink,Dunkin
+TXN001037,2024-07-31,Dunkin - Coffee,-6.4,debit,Food & Drink,Dunkin
+TXN001038,2024-07-31,Whole Foods,-36.83,debit,Groceries,Whole Foods
+TXN001039,2024-07-31,Chevron,-45.14,debit,Transportation,Chevron
+TXN001043,2024-08-01,Wendys,-12.23,debit,Dining Out,Wendys
+TXN001042,2024-08-01,Starbucks - Coffee,-7.31,debit,Food & Drink,Starbucks
+TXN001040,2024-08-01,ACME Corp - Salary Deposit,4500.0,credit,Income,ACME Corp
+TXN001041,2024-08-01,Rent Payment - Oak Street Apartments,-1650.0,debit,Housing,Oak Street Apartments
+TXN001044,2024-08-02,Dunkin - Coffee,-6.65,debit,Food & Drink,Dunkin
+TXN001045,2024-08-02,Target,-53.26,debit,Groceries,Target
+TXN001046,2024-08-02,Taco Bell,-15.27,debit,Dining Out,Taco Bell
+TXN001047,2024-08-03,Planet Fitness Monthly,-24.99,debit,Fitness,Planet Fitness
+TXN001048,2024-08-03,Thai Kitchen,-26.21,debit,Dining Out,Thai Kitchen
+TXN001049,2024-08-03,Uber Ride,-18.8,debit,Transportation,Uber
+TXN001051,2024-08-04,Thai Kitchen,-26.01,debit,Dining Out,Thai Kitchen
+TXN001050,2024-08-04,Safeway,-141.21,debit,Groceries,Safeway
+TXN001054,2024-08-05,McDonalds,-17.88,debit,Dining Out,McDonalds
+TXN001052,2024-08-05,PG&E Electric,-74.99,debit,Utilities,PG&E Electric
+TXN001053,2024-08-05,Blue Bottle Coffee - Coffee,-7.23,debit,Food & Drink,Blue Bottle Coffee
+TXN001055,2024-08-06,Local Cafe - Coffee,-6.89,debit,Food & Drink,Local Cafe
+TXN001056,2024-08-07,Comcast Internet,-79.99,debit,Utilities,Comcast Internet
+TXN001057,2024-08-07,Blue Bottle Coffee - Coffee,-7.44,debit,Food & Drink,Blue Bottle Coffee
+TXN001058,2024-08-07,H&M,-111.05,debit,Shopping,H&M
+TXN001059,2024-08-08,Hulu + Live TV,-69.99,debit,Entertainment,Hulu
+TXN001060,2024-08-08,Sushi Palace,-10.64,debit,Dining Out,Sushi Palace
+TXN001061,2024-08-08,Shell,-58.5,debit,Transportation,Shell
+TXN001062,2024-08-09,Dunkin - Coffee,-5.99,debit,Food & Drink,Dunkin
+TXN001063,2024-08-10,AT&T Phone,-65.0,debit,Utilities,AT&T Phone
+TXN001064,2024-08-10,Five Guys,-44.55,debit,Dining Out,Five Guys
+TXN001068,2024-08-11,Target,-92.82,debit,Shopping,Target
+TXN001067,2024-08-11,76 Gas,-47.65,debit,Transportation,76 Gas
+TXN001066,2024-08-11,Thai Kitchen,-37.93,debit,Dining Out,Thai Kitchen
+TXN001065,2024-08-11,Shake Shack,-37.42,debit,Dining Out,Shake Shack
+TXN001069,2024-08-12,Spotify Premium,-10.99,debit,Entertainment,Spotify
+TXN001070,2024-08-13,Dunkin - Coffee,-6.1,debit,Food & Drink,Dunkin
+TXN001071,2024-08-13,Shell,-62.79,debit,Transportation,Shell
+TXN001072,2024-08-14,Peets Coffee - Coffee,-6.71,debit,Food & Drink,Peets Coffee
+TXN001073,2024-08-14,Five Guys,-16.82,debit,Dining Out,Five Guys
+TXN001074,2024-08-15,Netflix Subscription,-15.99,debit,Entertainment,Netflix
+TXN001075,2024-08-15,Target,-54.03,debit,Groceries,Target
+TXN001076,2024-08-15,Chipotle,-16.17,debit,Dining Out,Chipotle
+TXN001078,2024-08-16,Panera Bread,-17.23,debit,Dining Out,Panera Bread
+TXN001077,2024-08-16,Dunkin - Coffee,-6.91,debit,Food & Drink,Dunkin
+TXN001081,2024-08-17,Chevron,-58.34,debit,Transportation,Chevron
+TXN001079,2024-08-17,Olive Garden,-25.84,debit,Dining Out,Olive Garden
+TXN001080,2024-08-17,Chipotle,-70.96,debit,Dining Out,Chipotle
+TXN001082,2024-08-18,Headspace Premium,-12.99,debit,Health,Headspace
+TXN001083,2024-08-18,Chevron,-64.52,debit,Transportation,Chevron
+TXN001084,2024-08-18,Bowling Alley,-42.38,debit,Entertainment,Bowling Alley
+TXN001085,2024-08-19,Blue Bottle Coffee - Coffee,-6.03,debit,Food & Drink,Blue Bottle Coffee
+TXN001086,2024-08-19,McDonalds,-16.87,debit,Dining Out,McDonalds
+TXN001087,2024-08-19,Arco,-51.99,debit,Transportation,Arco
+TXN001089,2024-08-20,Safeway,-38.95,debit,Groceries,Safeway
+TXN001088,2024-08-20,Amazon Prime Membership,-14.99,debit,Shopping,Amazon Prime Video
+TXN001090,2024-08-20,Taco Bell,-17.74,debit,Dining Out,Taco Bell
+TXN001092,2024-08-21,Trader Joes,-31.25,debit,Groceries,Trader Joes
+TXN001091,2024-08-21,Dunkin - Coffee,-6.16,debit,Food & Drink,Dunkin
+TXN001093,2024-08-22,Peets Coffee - Coffee,-6.37,debit,Food & Drink,Peets Coffee
+TXN001094,2024-08-22,Pizza Hut,-11.52,debit,Dining Out,Pizza Hut
+TXN001095,2024-08-22,Arco,-45.03,debit,Transportation,Arco
+TXN001096,2024-08-23,Blue Bottle Coffee - Coffee,-6.23,debit,Food & Drink,Blue Bottle Coffee
+TXN001097,2024-08-23,Trader Joes,-46.81,debit,Groceries,Trader Joes
+TXN001098,2024-08-23,76 Gas,-55.14,debit,Transportation,76 Gas
+TXN001100,2024-08-24,Panera Bread,-38.55,debit,Dining Out,Panera Bread
+TXN001099,2024-08-24,Trader Joes,-118.81,debit,Groceries,Trader Joes
+TXN001101,2024-08-24,Bowling Alley,-22.36,debit,Entertainment,Bowling Alley
+TXN001103,2024-08-25,Sushi Palace,-55.45,debit,Dining Out,Sushi Palace
+TXN001102,2024-08-25,Five Guys,-34.3,debit,Dining Out,Five Guys
+TXN001104,2024-08-26,Dunkin - Coffee,-6.17,debit,Food & Drink,Dunkin
+TXN001105,2024-08-27,Starbucks - Coffee,-5.59,debit,Food & Drink,Starbucks
+TXN001106,2024-08-29,Starbucks - Coffee,-7.29,debit,Food & Drink,Starbucks
+TXN001107,2024-08-29,AutoNation - Brake Repair,-850.0,debit,Auto Maintenance,AutoNation
+TXN001108,2024-08-31,Safeway,-136.1,debit,Groceries,Safeway
+TXN001109,2024-08-31,Five Guys,-44.0,debit,Dining Out,Five Guys
+TXN001110,2024-09-01,ACME Corp - Salary Deposit,4500.0,credit,Income,ACME Corp
+TXN001111,2024-09-01,Rent Payment - Oak Street Apartments,-1650.0,debit,Housing,Oak Street Apartments
+TXN001112,2024-09-01,Uber Ride,-31.8,debit,Transportation,Uber
+TXN001113,2024-09-02,Blue Bottle Coffee - Coffee,-6.05,debit,Food & Drink,Blue Bottle Coffee
+TXN001114,2024-09-02,Trader Joes,-33.21,debit,Groceries,Trader Joes
+TXN001115,2024-09-02,Sushi Palace,-10.64,debit,Dining Out,Sushi Palace
+TXN001116,2024-09-02,Arco,-58.88,debit,Transportation,Arco
+TXN001119,2024-09-03,Thai Kitchen,-13.12,debit,Dining Out,Thai Kitchen
+TXN001118,2024-09-03,Local Cafe - Coffee,-6.16,debit,Food & Drink,Local Cafe
+TXN001117,2024-09-03,Planet Fitness Monthly,-24.99,debit,Fitness,Planet Fitness
+TXN001120,2024-09-04,Dunkin - Coffee,-6.26,debit,Food & Drink,Dunkin
+TXN001121,2024-09-04,Trader Joes,-35.45,debit,Groceries,Trader Joes
+TXN001122,2024-09-04,Thai Kitchen,-14.31,debit,Dining Out,Thai Kitchen
+TXN001123,2024-09-05,PG&E Electric,-96.93,debit,Utilities,PG&E Electric
+TXN001124,2024-09-05,Peets Coffee - Coffee,-6.37,debit,Food & Drink,Peets Coffee
+TXN001125,2024-09-05,Trader Joes,-48.41,debit,Groceries,Trader Joes
+TXN001126,2024-09-07,Comcast Internet,-79.99,debit,Utilities,Comcast Internet
+TXN001127,2024-09-07,Panera Bread,-27.71,debit,Dining Out,Panera Bread
+TXN001128,2024-09-07,Chipotle,-45.41,debit,Dining Out,Chipotle
+TXN001134,2024-09-08,Amazon Prime Video,-23.35,debit,Entertainment,Amazon Prime Video
+TXN001133,2024-09-08,Shell,-60.08,debit,Transportation,Shell
+TXN001132,2024-09-08,Five Guys,-43.97,debit,Dining Out,Five Guys
+TXN001131,2024-09-08,Chipotle,-39.98,debit,Dining Out,Chipotle
+TXN001130,2024-09-08,Target,-97.66,debit,Groceries,Target
+TXN001129,2024-09-08,Hulu + Live TV,-69.99,debit,Entertainment,Hulu
+TXN001135,2024-09-09,Starbucks - Coffee,-6.63,debit,Food & Drink,Starbucks
+TXN001136,2024-09-09,Trader Joes,-51.84,debit,Groceries,Trader Joes
+TXN001137,2024-09-09,Pizza Hut,-17.71,debit,Dining Out,Pizza Hut
+TXN001138,2024-09-10,AT&T Phone,-65.0,debit,Utilities,AT&T Phone
+TXN001139,2024-09-10,Peets Coffee - Coffee,-5.72,debit,Food & Drink,Peets Coffee
+TXN001140,2024-09-10,Trader Joes,-45.15,debit,Groceries,Trader Joes
+TXN001141,2024-09-11,Dunkin - Coffee,-6.88,debit,Food & Drink,Dunkin
+TXN001142,2024-09-11,Shake Shack,-12.41,debit,Dining Out,Shake Shack
+TXN001144,2024-09-12,Sushi Palace,-13.43,debit,Dining Out,Sushi Palace
+TXN001143,2024-09-12,Spotify Premium,-10.99,debit,Entertainment,Spotify
+TXN001145,2024-09-13,Local Cafe - Coffee,-7.14,debit,Food & Drink,Local Cafe
+TXN001146,2024-09-13,Trader Joes,-47.25,debit,Groceries,Trader Joes
+TXN001147,2024-09-14,Shake Shack,-53.59,debit,Dining Out,Shake Shack
+TXN001148,2024-09-15,Netflix Subscription,-15.99,debit,Entertainment,Netflix
+TXN001149,2024-09-15,Shake Shack,-29.88,debit,Dining Out,Shake Shack
+TXN001150,2024-09-15,Panera Bread,-48.46,debit,Dining Out,Panera Bread
+TXN001151,2024-09-16,Peets Coffee - Coffee,-7.26,debit,Food & Drink,Peets Coffee
+TXN001152,2024-09-16,McDonalds,-14.13,debit,Dining Out,McDonalds
+TXN001153,2024-09-16,Chevron,-59.4,debit,Transportation,Chevron
+TXN001155,2024-09-18,Blue Bottle Coffee - Coffee,-6.31,debit,Food & Drink,Blue Bottle Coffee
+TXN001154,2024-09-18,Headspace Premium,-12.99,debit,Health,Headspace
+TXN001156,2024-09-18,Walmart,-37.92,debit,Groceries,Walmart
+TXN001158,2024-09-19,Trader Joes,-33.07,debit,Groceries,Trader Joes
+TXN001157,2024-09-19,Peets Coffee - Coffee,-6.91,debit,Food & Drink,Peets Coffee
+TXN001159,2024-09-20,Amazon Prime Membership,-14.99,debit,Shopping,Amazon Prime Video
+TXN001160,2024-09-20,Panera Bread,-13.87,debit,Dining Out,Panera Bread
+TXN001161,2024-09-21,Thai Kitchen,-41.65,debit,Dining Out,Thai Kitchen
+TXN001162,2024-09-21,Five Guys,-42.18,debit,Dining Out,Five Guys
+TXN001163,2024-09-21,Chevron,-50.49,debit,Transportation,Chevron
+TXN001164,2024-09-22,Target,-87.18,debit,Groceries,Target
+TXN001165,2024-09-22,Pizza Hut,-34.39,debit,Dining Out,Pizza Hut
+TXN001166,2024-09-22,Olive Garden,-73.62,debit,Dining Out,Olive Garden
+TXN001167,2024-09-22,Mini Golf,-17.59,debit,Entertainment,Mini Golf
+TXN001168,2024-09-23,Starbucks - Coffee,-5.8,debit,Food & Drink,Starbucks
+TXN001169,2024-09-23,Chevron,-47.37,debit,Transportation,Chevron
+TXN001170,2024-09-24,Dunkin - Coffee,-5.95,debit,Food & Drink,Dunkin
+TXN001172,2024-09-25,Chevron,-57.51,debit,Transportation,Chevron
+TXN001171,2024-09-25,Walmart,-27.11,debit,Groceries,Walmart
+TXN001173,2024-09-26,Blue Bottle Coffee - Coffee,-5.85,debit,Food & Drink,Blue Bottle Coffee
+TXN001174,2024-09-26,Whole Foods,-39.3,debit,Groceries,Whole Foods
+TXN001175,2024-09-26,Best Buy,-150.18,debit,Shopping,Best Buy
+TXN001176,2024-09-27,Local Cafe - Coffee,-5.64,debit,Food & Drink,Local Cafe
+TXN001177,2024-09-27,Trader Joes,-52.57,debit,Groceries,Trader Joes
+TXN001178,2024-09-28,Olive Garden,-43.17,debit,Dining Out,Olive Garden
+TXN001179,2024-09-28,Chevron,-60.85,debit,Transportation,Chevron
+TXN001180,2024-09-29,Pizza Hut,-38.99,debit,Dining Out,Pizza Hut
+TXN001181,2024-09-29,Mini Golf,-40.71,debit,Entertainment,Mini Golf
+TXN001182,2024-09-30,Starbucks - Coffee,-5.68,debit,Food & Drink,Starbucks
+TXN001186,2024-10-01,Arco,-63.32,debit,Transportation,Arco
+TXN001185,2024-10-01,McDonalds,-16.1,debit,Dining Out,McDonalds
+TXN001184,2024-10-01,Rent Payment - Oak Street Apartments,-1650.0,debit,Housing,Oak Street Apartments
+TXN001183,2024-10-01,ACME Corp - Salary Deposit,4500.0,credit,Income,ACME Corp
+TXN001187,2024-10-02,Local Cafe - Coffee,-7.44,debit,Food & Drink,Local Cafe
+TXN001188,2024-10-03,Planet Fitness Monthly,-24.99,debit,Fitness,Planet Fitness
+TXN001189,2024-10-03,Local Cafe - Coffee,-6.89,debit,Food & Drink,Local Cafe
+TXN001190,2024-10-03,Target,-53.47,debit,Groceries,Target
+TXN001191,2024-10-04,Local Cafe - Coffee,-7.23,debit,Food & Drink,Local Cafe
+TXN001192,2024-10-04,Sushi Palace,-13.7,debit,Dining Out,Sushi Palace
+TXN001193,2024-10-04,76 Gas,-57.45,debit,Transportation,76 Gas
+TXN001196,2024-10-05,Shake Shack,-39.86,debit,Dining Out,Shake Shack
+TXN001195,2024-10-05,Trader Joes,-118.45,debit,Groceries,Trader Joes
+TXN001194,2024-10-05,PG&E Electric,-83.26,debit,Utilities,PG&E Electric
+TXN001197,2024-10-06,Thai Kitchen,-29.49,debit,Dining Out,Thai Kitchen
+TXN001198,2024-10-06,Shell,-57.95,debit,Transportation,Shell
+TXN001199,2024-10-06,Lyft Ride,-25.18,debit,Transportation,Lyft
+TXN001200,2024-10-07,Comcast Internet,-79.99,debit,Utilities,Comcast Internet
+TXN001201,2024-10-07,Walmart,-30.06,debit,Groceries,Walmart
+TXN001202,2024-10-07,Pizza Hut,-14.07,debit,Dining Out,Pizza Hut
+TXN001203,2024-10-08,Hulu + Live TV,-69.99,debit,Entertainment,Hulu
+TXN001204,2024-10-08,Local Cafe - Coffee,-6.18,debit,Food & Drink,Local Cafe
+TXN001205,2024-10-08,McDonalds,-12.26,debit,Dining Out,McDonalds
+TXN001206,2024-10-09,Sushi Palace,-13.87,debit,Dining Out,Sushi Palace
+TXN001209,2024-10-10,Thai Kitchen,-11.87,debit,Dining Out,Thai Kitchen
+TXN001210,2024-10-10,Nike,-110.41,debit,Shopping,Nike
+TXN001207,2024-10-10,AT&T Phone,-65.0,debit,Utilities,AT&T Phone
+TXN001208,2024-10-10,Peets Coffee - Coffee,-7.24,debit,Food & Drink,Peets Coffee
+TXN001212,2024-10-12,Whole Foods,-88.84,debit,Groceries,Whole Foods
+TXN001213,2024-10-12,Thai Kitchen,-69.97,debit,Dining Out,Thai Kitchen
+TXN001211,2024-10-12,Spotify Premium,-10.99,debit,Entertainment,Spotify
+TXN001214,2024-10-13,Olive Garden,-26.5,debit,Dining Out,Olive Garden
+TXN001215,2024-10-13,Bowling Alley,-44.83,debit,Entertainment,Bowling Alley
+TXN001216,2024-10-13,Best Buy - MacBook Pro,-1299.0,debit,Electronics,Best Buy
+TXN001217,2024-10-14,Panera Bread,-17.1,debit,Dining Out,Panera Bread
+TXN001218,2024-10-15,Netflix Subscription,-15.99,debit,Entertainment,Netflix
+TXN001219,2024-10-15,Blue Bottle Coffee - Coffee,-6.76,debit,Food & Drink,Blue Bottle Coffee
+TXN001220,2024-10-16,Starbucks - Coffee,-6.39,debit,Food & Drink,Starbucks
+TXN001221,2024-10-16,Shell,-50.87,debit,Transportation,Shell
+TXN001222,2024-10-17,Dunkin - Coffee,-6.32,debit,Food & Drink,Dunkin
+TXN001223,2024-10-17,Subway,-10.63,debit,Dining Out,Subway
+TXN001226,2024-10-18,KFC,-15.33,debit,Dining Out,KFC
+TXN001225,2024-10-18,Dunkin - Coffee,-5.79,debit,Food & Drink,Dunkin
+TXN001224,2024-10-18,Headspace Premium,-12.99,debit,Health,Headspace
+TXN001227,2024-10-19,Walmart,-91.06,debit,Groceries,Walmart
+TXN001228,2024-10-19,Five Guys,-44.75,debit,Dining Out,Five Guys
+TXN001229,2024-10-19,Panera Bread,-62.61,debit,Dining Out,Panera Bread
+TXN001230,2024-10-20,Amazon Prime Membership,-14.99,debit,Shopping,Amazon Prime Video
+TXN001231,2024-10-20,Target,-120.03,debit,Groceries,Target
+TXN001232,2024-10-20,Pizza Hut,-25.44,debit,Dining Out,Pizza Hut
+TXN001233,2024-10-20,Uber Ride,-33.21,debit,Transportation,Uber
+TXN001234,2024-10-21,Shake Shack,-12.82,debit,Dining Out,Shake Shack
+TXN001235,2024-10-22,Blue Bottle Coffee - Coffee,-6.76,debit,Food & Drink,Blue Bottle Coffee
+TXN001236,2024-10-23,Blue Bottle Coffee - Coffee,-5.68,debit,Food & Drink,Blue Bottle Coffee
+TXN001237,2024-10-23,Target,-31.15,debit,Groceries,Target
+TXN001238,2024-10-23,Sushi Palace,-17.01,debit,Dining Out,Sushi Palace
+TXN001239,2024-10-24,Blue Bottle Coffee - Coffee,-6.01,debit,Food & Drink,Blue Bottle Coffee
+TXN001240,2024-10-25,Starbucks - Coffee,-6.44,debit,Food & Drink,Starbucks
+TXN001241,2024-10-25,Safeway,-55.1,debit,Groceries,Safeway
+TXN001242,2024-10-26,Panera Bread,-25.28,debit,Dining Out,Panera Bread
+TXN001243,2024-10-26,Shake Shack,-49.74,debit,Dining Out,Shake Shack
+TXN001244,2024-10-26,Lyft Ride,-31.45,debit,Transportation,Lyft
+TXN001245,2024-10-26,Amazon Prime Video,-31.5,debit,Entertainment,Amazon Prime Video
+TXN001246,2024-10-27,Sushi Palace,-60.91,debit,Dining Out,Sushi Palace
+TXN001247,2024-10-28,Starbucks - Coffee,-7.39,debit,Food & Drink,Starbucks
+TXN001248,2024-10-28,Target,-29.06,debit,Groceries,Target
+TXN001249,2024-10-28,Sushi Palace,-11.09,debit,Dining Out,Sushi Palace
+TXN001250,2024-10-29,Dunkin - Coffee,-6.34,debit,Food & Drink,Dunkin
+TXN001251,2024-10-29,Thai Kitchen,-15.24,debit,Dining Out,Thai Kitchen
+TXN001253,2024-10-30,76 Gas,-46.99,debit,Transportation,76 Gas
+TXN001252,2024-10-30,Trader Joes,-32.6,debit,Groceries,Trader Joes
+TXN001254,2024-10-31,Peets Coffee - Coffee,-5.62,debit,Food & Drink,Peets Coffee
+TXN001255,2024-10-31,Whole Foods,-58.22,debit,Groceries,Whole Foods
+TXN001256,2024-10-31,Chevron,-57.83,debit,Transportation,Chevron
+TXN001257,2024-11-01,ACME Corp - Salary Deposit,4500.0,credit,Income,ACME Corp
+TXN001258,2024-11-01,Rent Payment - Oak Street Apartments,-1650.0,debit,Housing,Oak Street Apartments
+TXN001259,2024-11-01,Peets Coffee - Coffee,-5.99,debit,Food & Drink,Peets Coffee
+TXN001260,2024-11-01,Walmart,-32.18,debit,Groceries,Walmart
+TXN001261,2024-11-02,Olive Garden,-40.77,debit,Dining Out,Olive Garden
+TXN001262,2024-11-02,Pizza Hut,-69.34,debit,Dining Out,Pizza Hut
+TXN001263,2024-11-02,Chevron,-55.8,debit,Transportation,Chevron
+TXN001267,2024-11-03,Olive Garden,-64.67,debit,Dining Out,Olive Garden
+TXN001265,2024-11-03,Trader Joes,-135.3,debit,Groceries,Trader Joes
+TXN001264,2024-11-03,Planet Fitness Monthly,-24.99,debit,Fitness,Planet Fitness
+TXN001266,2024-11-03,Five Guys,-25.32,debit,Dining Out,Five Guys
+TXN001268,2024-11-04,Starbucks - Coffee,-6.4,debit,Food & Drink,Starbucks
+TXN001269,2024-11-04,Walmart,-26.52,debit,Groceries,Walmart
+TXN001270,2024-11-05,PG&E Electric,-83.74,debit,Utilities,PG&E Electric
+TXN001271,2024-11-05,Target,-54.66,debit,Groceries,Target
+TXN001272,2024-11-05,Arco,-46.47,debit,Transportation,Arco
+TXN001273,2024-11-06,Starbucks - Coffee,-5.75,debit,Food & Drink,Starbucks
+TXN001274,2024-11-07,Comcast Internet,-79.99,debit,Utilities,Comcast Internet
+TXN001275,2024-11-07,Peets Coffee - Coffee,-6.41,debit,Food & Drink,Peets Coffee
+TXN001276,2024-11-07,Panera Bread,-10.92,debit,Dining Out,Panera Bread
+TXN001278,2024-11-08,Blue Bottle Coffee - Coffee,-6.36,debit,Food & Drink,Blue Bottle Coffee
+TXN001277,2024-11-08,Hulu + Live TV,-69.99,debit,Entertainment,Hulu
+TXN001279,2024-11-09,Five Guys,-38.3,debit,Dining Out,Five Guys
+TXN001280,2024-11-09,Olive Garden,-62.47,debit,Dining Out,Olive Garden
+TXN001281,2024-11-09,Uber Ride,-16.86,debit,Transportation,Uber
+TXN001282,2024-11-10,AT&T Phone,-65.0,debit,Utilities,AT&T Phone
+TXN001283,2024-11-10,Five Guys,-38.4,debit,Dining Out,Five Guys
+TXN001284,2024-11-10,Panera Bread,-69.72,debit,Dining Out,Panera Bread
+TXN001285,2024-11-11,Blue Bottle Coffee - Coffee,-5.81,debit,Food & Drink,Blue Bottle Coffee
+TXN001286,2024-11-12,Spotify Premium,-10.99,debit,Entertainment,Spotify
+TXN001287,2024-11-12,Peets Coffee - Coffee,-6.65,debit,Food & Drink,Peets Coffee
+TXN001288,2024-11-12,Stanford Medical - Co-pay,-250.0,debit,Healthcare,Stanford Medical
+TXN001289,2024-11-13,Dunkin - Coffee,-5.55,debit,Food & Drink,Dunkin
+TXN001291,2024-11-14,Subway,-14.53,debit,Dining Out,Subway
+TXN001290,2024-11-14,Peets Coffee - Coffee,-7.34,debit,Food & Drink,Peets Coffee
+TXN001292,2024-11-15,Netflix Subscription,-15.99,debit,Entertainment,Netflix
+TXN001293,2024-11-15,Starbucks - Coffee,-5.68,debit,Food & Drink,Starbucks
+TXN001294,2024-11-15,Olive Garden,-12.73,debit,Dining Out,Olive Garden
+TXN001295,2024-11-16,Thai Kitchen,-42.67,debit,Dining Out,Thai Kitchen
+TXN001296,2024-11-16,Chipotle,-61.96,debit,Dining Out,Chipotle
+TXN001297,2024-11-17,Walmart,-87.97,debit,Groceries,Walmart
+TXN001298,2024-11-17,Pizza Hut,-38.56,debit,Dining Out,Pizza Hut
+TXN001299,2024-11-17,Pizza Hut,-36.82,debit,Dining Out,Pizza Hut
+TXN001300,2024-11-17,Best Buy,-190.71,debit,Shopping,Best Buy
+TXN001303,2024-11-18,Arco,-55.65,debit,Transportation,Arco
+TXN001302,2024-11-18,Whole Foods,-25.27,debit,Groceries,Whole Foods
+TXN001301,2024-11-18,Headspace Premium,-12.99,debit,Health,Headspace
+TXN001304,2024-11-19,Peets Coffee - Coffee,-5.64,debit,Food & Drink,Peets Coffee
+TXN001305,2024-11-19,McDonalds,-13.68,debit,Dining Out,McDonalds
+TXN001306,2024-11-19,76 Gas,-56.52,debit,Transportation,76 Gas
+TXN001307,2024-11-20,Amazon Prime Membership,-14.99,debit,Shopping,Amazon Prime Video
+TXN001308,2024-11-20,Local Cafe - Coffee,-6.08,debit,Food & Drink,Local Cafe
+TXN001309,2024-11-20,Arco,-61.64,debit,Transportation,Arco
+TXN001310,2024-11-21,Starbucks - Coffee,-5.99,debit,Food & Drink,Starbucks
+TXN001311,2024-11-22,Peets Coffee - Coffee,-7.06,debit,Food & Drink,Peets Coffee
+TXN001312,2024-11-22,Whole Foods,-43.57,debit,Groceries,Whole Foods
+TXN001313,2024-11-22,Shake Shack,-12.8,debit,Dining Out,Shake Shack
+TXN001315,2024-11-23,Olive Garden,-65.41,debit,Dining Out,Olive Garden
+TXN001314,2024-11-23,Olive Garden,-30.12,debit,Dining Out,Olive Garden
+TXN001316,2024-11-23,Lyft Ride,-24.28,debit,Transportation,Lyft
+TXN001320,2024-11-25,Macys,-78.8,debit,Shopping,Macys
+TXN001319,2024-11-25,Taco Bell,-12.48,debit,Dining Out,Taco Bell
+TXN001318,2024-11-25,Trader Joes,-45.7,debit,Groceries,Trader Joes
+TXN001317,2024-11-25,Local Cafe - Coffee,-6.38,debit,Food & Drink,Local Cafe
+TXN001321,2024-11-26,Starbucks - Coffee,-6.73,debit,Food & Drink,Starbucks
+TXN001322,2024-11-28,Blue Bottle Coffee - Coffee,-7.42,debit,Food & Drink,Blue Bottle Coffee
+TXN001323,2024-11-29,Blue Bottle Coffee - Coffee,-5.58,debit,Food & Drink,Blue Bottle Coffee
+TXN001324,2024-11-30,Five Guys,-62.16,debit,Dining Out,Five Guys
+TXN001325,2024-11-30,76 Gas,-46.32,debit,Transportation,76 Gas
+TXN001326,2024-11-30,Lyft Ride,-20.68,debit,Transportation,Lyft
+TXN001327,2024-12-01,ACME Corp - Salary Deposit,4500.0,credit,Income,ACME Corp
+TXN001328,2024-12-01,Rent Payment - Oak Street Apartments,-1650.0,debit,Housing,Oak Street Apartments
+TXN001329,2024-12-01,Olive Garden,-71.67,debit,Dining Out,Olive Garden
+TXN001330,2024-12-01,AMC Theaters,-25.84,debit,Entertainment,AMC Theaters
+TXN001331,2024-12-02,Peets Coffee - Coffee,-7.13,debit,Food & Drink,Peets Coffee
+TXN001332,2024-12-03,Planet Fitness Monthly,-24.99,debit,Fitness,Planet Fitness
+TXN001333,2024-12-03,Local Cafe - Coffee,-6.52,debit,Food & Drink,Local Cafe
+TXN001334,2024-12-03,Trader Joes,-31.31,debit,Groceries,Trader Joes
+TXN001335,2024-12-03,Shake Shack,-13.89,debit,Dining Out,Shake Shack
+TXN001336,2024-12-03,Chevron,-48.1,debit,Transportation,Chevron
+TXN001337,2024-12-05,PG&E Electric,-89.86,debit,Utilities,PG&E Electric
+TXN001338,2024-12-05,Chevron,-61.63,debit,Transportation,Chevron
+TXN001339,2024-12-06,Target,-26.53,debit,Groceries,Target
+TXN001340,2024-12-06,Panera Bread,-11.9,debit,Dining Out,Panera Bread
+TXN001341,2024-12-07,Comcast Internet,-79.99,debit,Utilities,Comcast Internet
+TXN001342,2024-12-07,Sushi Palace,-31.19,debit,Dining Out,Sushi Palace
+TXN001344,2024-12-08,Pizza Hut,-40.56,debit,Dining Out,Pizza Hut
+TXN001345,2024-12-08,Panera Bread,-73.65,debit,Dining Out,Panera Bread
+TXN001343,2024-12-08,Hulu + Live TV,-69.99,debit,Entertainment,Hulu
+TXN001346,2024-12-09,Peets Coffee - Coffee,-6.61,debit,Food & Drink,Peets Coffee
+TXN001347,2024-12-09,Walmart,-54.79,debit,Groceries,Walmart
+TXN001348,2024-12-09,Shake Shack,-11.28,debit,Dining Out,Shake Shack
+TXN001349,2024-12-10,AT&T Phone,-65.0,debit,Utilities,AT&T Phone
+TXN001350,2024-12-10,Safeway,-53.58,debit,Groceries,Safeway
+TXN001351,2024-12-11,Peets Coffee - Coffee,-5.97,debit,Food & Drink,Peets Coffee
+TXN001352,2024-12-11,McDonalds,-12.55,debit,Dining Out,McDonalds
+TXN001353,2024-12-11,76 Gas,-60.83,debit,Transportation,76 Gas
+TXN001357,2024-12-12,Taco Bell,-10.15,debit,Dining Out,Taco Bell
+TXN001358,2024-12-12,Chevron,-55.98,debit,Transportation,Chevron
+TXN001356,2024-12-12,Target,-40.7,debit,Groceries,Target
+TXN001355,2024-12-12,Local Cafe - Coffee,-6.89,debit,Food & Drink,Local Cafe
+TXN001354,2024-12-12,Spotify Premium,-10.99,debit,Entertainment,Spotify
+TXN001359,2024-12-13,Starbucks - Coffee,-7.05,debit,Food & Drink,Starbucks
+TXN001360,2024-12-13,Whole Foods,-26.67,debit,Groceries,Whole Foods
+TXN001361,2024-12-14,Target,-121.77,debit,Groceries,Target
+TXN001362,2024-12-14,Sushi Palace,-39.37,debit,Dining Out,Sushi Palace
+TXN001363,2024-12-14,Chipotle,-59.59,debit,Dining Out,Chipotle
+TXN001364,2024-12-14,Arco,-48.75,debit,Transportation,Arco
+TXN001365,2024-12-15,Netflix Subscription,-15.99,debit,Entertainment,Netflix
+TXN001366,2024-12-15,Chipotle,-32.81,debit,Dining Out,Chipotle
+TXN001367,2024-12-15,Panera Bread,-74.24,debit,Dining Out,Panera Bread
+TXN001368,2024-12-15,Uber Ride,-21.9,debit,Transportation,Uber
+TXN001369,2024-12-16,McDonalds,-12.82,debit,Dining Out,McDonalds
+TXN001373,2024-12-18,KFC,-14.12,debit,Dining Out,KFC
+TXN001372,2024-12-18,Safeway,-56.0,debit,Groceries,Safeway
+TXN001371,2024-12-18,Local Cafe - Coffee,-5.57,debit,Food & Drink,Local Cafe
+TXN001370,2024-12-18,Headspace Premium,-12.99,debit,Health,Headspace
+TXN001374,2024-12-19,Blue Bottle Coffee - Coffee,-6.07,debit,Food & Drink,Blue Bottle Coffee
+TXN001375,2024-12-19,Five Guys,-12.66,debit,Dining Out,Five Guys
+TXN001376,2024-12-19,76 Gas,-53.74,debit,Transportation,76 Gas
+TXN001377,2024-12-20,Amazon Prime Membership,-14.99,debit,Shopping,Amazon Prime Video
+TXN001378,2024-12-20,Local Cafe - Coffee,-6.18,debit,Food & Drink,Local Cafe
+TXN001379,2024-12-20,Target,-37.86,debit,Groceries,Target
+TXN001380,2024-12-21,Olive Garden,-35.91,debit,Dining Out,Olive Garden
+TXN001381,2024-12-21,Thai Kitchen,-48.12,debit,Dining Out,Thai Kitchen
+TXN001382,2024-12-22,Five Guys,-37.3,debit,Dining Out,Five Guys
+TXN001383,2024-12-22,Chipotle,-38.0,debit,Dining Out,Chipotle
+TXN001385,2024-12-23,Chevron,-60.57,debit,Transportation,Chevron
+TXN001384,2024-12-23,Walmart,-48.73,debit,Groceries,Walmart
+TXN001386,2024-12-24,Dunkin - Coffee,-5.56,debit,Food & Drink,Dunkin
+TXN001387,2024-12-24,Target,-58.21,debit,Groceries,Target
+TXN001388,2024-12-24,Shake Shack,-10.62,debit,Dining Out,Shake Shack
+TXN001389,2024-12-24,76 Gas,-52.96,debit,Transportation,76 Gas
+TXN001390,2024-12-25,Starbucks - Coffee,-5.55,debit,Food & Drink,Starbucks
+TXN001391,2024-12-25,Walmart,-38.54,debit,Groceries,Walmart
+TXN001392,2024-12-26,Dunkin - Coffee,-6.07,debit,Food & Drink,Dunkin
+TXN001393,2024-12-26,Shell,-54.04,debit,Transportation,Shell
+TXN001394,2024-12-27,Starbucks - Coffee,-7.12,debit,Food & Drink,Starbucks
+TXN001395,2024-12-28,Pizza Hut,-42.03,debit,Dining Out,Pizza Hut
+TXN001399,2024-12-29,Uber Ride,-16.31,debit,Transportation,Uber
+TXN001398,2024-12-29,Five Guys,-53.7,debit,Dining Out,Five Guys
+TXN001397,2024-12-29,Shake Shack,-25.53,debit,Dining Out,Shake Shack
+TXN001396,2024-12-29,Safeway,-135.44,debit,Groceries,Safeway
+TXN001400,2024-12-30,Local Cafe - Coffee,-7.04,debit,Food & Drink,Local Cafe
+TXN001401,2024-12-30,Chipotle,-15.14,debit,Dining Out,Chipotle
+TXN001402,2024-12-31,Dunkin - Coffee,-6.78,debit,Food & Drink,Dunkin
+TXN001403,2024-12-31,Safeway,-40.14,debit,Groceries,Safeway
+TXN001404,2024-12-31,Shell,-55.36,debit,Transportation,Shell
+TXN001405,2025-01-01,ACME Corp - Salary Deposit,4500.0,credit,Income,ACME Corp
+TXN001406,2025-01-01,Rent Payment - Oak Street Apartments,-1650.0,debit,Housing,Oak Street Apartments
+TXN001407,2025-01-01,Blue Bottle Coffee - Coffee,-6.19,debit,Food & Drink,Blue Bottle Coffee
+TXN001408,2025-01-02,Dunkin - Coffee,-6.05,debit,Food & Drink,Dunkin
+TXN001409,2025-01-02,Chevron,-56.84,debit,Transportation,Chevron
+TXN001411,2025-01-03,Dunkin - Coffee,-6.94,debit,Food & Drink,Dunkin
+TXN001410,2025-01-03,Planet Fitness Monthly,-24.99,debit,Fitness,Planet Fitness
+TXN001412,2025-01-04,Whole Foods,-146.4,debit,Groceries,Whole Foods
+TXN001413,2025-01-04,Sushi Palace,-65.68,debit,Dining Out,Sushi Palace
+TXN001414,2025-01-05,PG&E Electric,-78.69,debit,Utilities,PG&E Electric
+TXN001415,2025-01-05,Panera Bread,-30.95,debit,Dining Out,Panera Bread
+TXN001416,2025-01-05,Chipotle,-41.32,debit,Dining Out,Chipotle
+TXN001417,2025-01-05,Bowling Alley,-40.7,debit,Entertainment,Bowling Alley
+TXN001418,2025-01-06,Chipotle,-14.12,debit,Dining Out,Chipotle
+TXN001419,2025-01-06,Chevron,-54.33,debit,Transportation,Chevron
+TXN001420,2025-01-07,Comcast Internet,-79.99,debit,Utilities,Comcast Internet
+TXN001421,2025-01-07,Starbucks - Coffee,-5.6,debit,Food & Drink,Starbucks
+TXN001422,2025-01-08,Hulu + Live TV,-69.99,debit,Entertainment,Hulu
+TXN001423,2025-01-09,Dunkin - Coffee,-6.43,debit,Food & Drink,Dunkin
+TXN001424,2025-01-09,Arco,-55.11,debit,Transportation,Arco
+TXN001426,2025-01-10,Peets Coffee - Coffee,-5.6,debit,Food & Drink,Peets Coffee
+TXN001425,2025-01-10,AT&T Phone,-65.0,debit,Utilities,AT&T Phone
+TXN001427,2025-01-10,Walmart,-55.88,debit,Groceries,Walmart
