@@ -279,8 +279,8 @@ body {
 
 .header-content h1 {
   font-family: 'Urbanist', sans-serif;
-  font-weight: 300;
-  font-size: 34px;
+  font-weight: 500;
+  font-size: 44px;
   color: var(--text-primary);
   margin-bottom: 4px;
 }
