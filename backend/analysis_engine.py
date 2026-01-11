@@ -391,7 +391,8 @@ class FinancialAnalyzer:
                     trial_to_paid = True
 
             # Minimal "cancel suggestion" logic (demo-friendly)
-            likely_unused = (days_since >= 45) or (len(g) <= 1)
+            likely_unused = (days_since >= 20) or (len(g) <= 1)
+
 
             results.append({
                 'merchant': merchant,
