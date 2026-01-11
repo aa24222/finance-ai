@@ -134,7 +134,21 @@ function FileUpload({ onUploadSuccess, dataStatus }) {
         />
         <label htmlFor="file-upload" className="upload-label">
           <span className="upload-icon">{isUploading ? '⏳' : '📁'}</span>
-          <span className="upload-text">{isUploading ? 'Uploading...' : 'Drop CSV here or click to upload'}</span>
+         <span className="upload-text">
+            {isUploading ? (
+              'Uploading...'
+            ) : (
+              <>
+                Drop CSV here or click to upload
+                <br />
+                <span style={{ opacity: 0.7, fontSize: '0.85em' }}>
+                  Plaid API integration coming soon!
+                </span>
+              </>
+            )}
+          </span>
+
+
           <span className="upload-hint">
             {dataStatus?.data_source === 'demo' ? 'Currently using demo data' : `Using: ${dataStatus?.file_name}`}
           </span>
@@ -408,9 +422,7 @@ function Subscriptions({ data }) {
 
                 {sub.service_type && <span className="sub-meta">{String(sub.service_type).replaceAll('_', ' ')}</span>}
 
-                {sub.last_charge_date && (
-                  <span className="sub-meta">Last: {new Date(sub.last_charge_date).toLocaleDateString()}</span>
-                )}
+                
 
                 {reasonsText && <span className="sub-meta flagged">Flagged: {reasonsText}</span>}
               </div>
@@ -522,7 +534,7 @@ function GoalTracker({ onCalculate, goalData }) {
               ></div>
             </div>
             <div className="progress-labels">
-              <span>{formatCurrency(safeProjected)}</span>
+              <span>$0</span>
               <span>{formatCurrency(safeGoal)}</span>
             </div>
           </div>

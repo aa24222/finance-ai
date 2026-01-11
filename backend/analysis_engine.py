@@ -587,6 +587,9 @@ class FinancialAnalyzer:
         future = np.arange(len(monthly), len(monthly) + int(goal_months)).reshape(-1, 1)
         predicted_savings = model_savings.predict(future)
 
+        # Prevent negative "savings" (overspending) from dragging totals down
+        predicted_savings = np.maximum(predicted_savings, 0)
+
         current_monthly_savings = float(np.mean(predicted_savings))
         projected_total_savings = float(np.sum(predicted_savings))
 
