@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+import anthropic
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from analysis_engine import FinancialAnalyzer
@@ -439,6 +440,80 @@ def get_trends():
         print(f"Error in /api/trends: {traceback.format_exc()}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/insights/advice', methods=['POST'])
+@require_auth
+def get_ai_advice():
+    """Get personalized financial advice from Claude AI."""
+    try:
+        user = request.current_user
+        analyzer, _, _ = get_analyzer_for_user(user['id'])
+
+        payload = request.get_json(silent=True) or {}
+        mode = payload.get('mode', 'ytd')
+
+        # Gather financial context
+        summary = analyzer.get_summary_stats(mode=mode)
+        habits = analyzer.detect_spending_habits(mode=mode)
+        subs = analyzer.detect_subscriptions(mode=mode)
+        anomalies = analyzer.detect_anomalies(mode=mode)
+        categories = analyzer.get_spending_by_category(mode=mode)
+
+        # Build top categories string
+        top_cats = categories[:5] if categories else []
+        cats_text = ", ".join([f"{c['category']}: ${c['amount']:.0f}" for c in top_cats])
+
+        # Build prompt
+        prompt = f"""You are a friendly financial coach. Analyze this user's spending and give 3 specific, actionable tips.
+
+FINANCIAL SNAPSHOT:
+- Total Income: ${summary.get('total_income', 0):,.0f}
+- Total Spending: ${summary.get('total_spending', 0):,.0f}
+- Net Balance: ${summary.get('net_balance', 0):,.0f}
+- Monthly Avg Spending: ${summary.get('avg_monthly_spending', 0):,.0f}
+
+TOP SPENDING CATEGORIES:
+{cats_text or 'No data'}
+
+SPENDING HABITS:
+{f"Frequent visits to {habits['habit_type']}: {habits['num_visits']} visits, ${habits['total_spent']:.0f} total" if habits else "No significant habits detected"}
+
+SUBSCRIPTIONS:
+- Count: {subs.get('total_count', 0)}
+- Monthly Cost: ${subs.get('total_monthly_cost', 0):.0f}
+- Flagged for Review: {subs.get('review_count', 0)} (${subs.get('review_monthly_amount', 0):.0f}/mo)
+
+UNUSUAL TRANSACTIONS:
+{f"Found {anomalies['total_anomalies']} unusual transactions totaling ${anomalies['total_amount']:.0f}" if anomalies and anomalies.get('found') else "None detected"}
+
+Give exactly 3 tips. Be specific with dollar amounts where possible. Keep each tip to 1-2 sentences. Be encouraging, not judgmental."""
+
+        # Call Claude API
+        api_key = os.environ.get('ANTHROPIC_API_KEY')
+        if not api_key:
+            return jsonify({
+                'success': False,
+                'error': 'AI service not configured'
+            }), 503
+
+        client = anthropic.Anthropic()
+        
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=400,
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        advice = response.content[0].text
+
+        return jsonify({
+            'success': True,
+            'advice': advice,
+            'mode': mode
+        })
+
+    except Exception as e:
+        print(f"Error in /api/insights/advice: {traceback.format_exc()}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # ========== Error Handlers ==========
 @app.errorhandler(404)

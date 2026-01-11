@@ -603,6 +603,79 @@ function Anomalies({ data }) {
   );
 }
 
+
+function AIAdvice({ authFetch, mode }) {
+  const [advice, setAdvice] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const getAdvice = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await authFetch('/insights/advice', {
+        method: 'POST',
+        body: { mode }
+      });
+      if (result.success) {
+        setAdvice(result.advice);
+      } else {
+        setError(result.error || 'Failed to get advice');
+      }
+    } catch (err) {
+      setError('Failed to connect to AI service');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="insight-card ai-advice-card">
+      <h3>🤖 AI Financial Coach</h3>
+      
+      {!advice && !loading && (
+        <div className="ai-prompt">
+          <p>Get personalized advice based on your spending patterns</p>
+          <button 
+            className="btn-primary" 
+            onClick={getAdvice}
+            disabled={loading}
+          >
+            Ask AI for Tips
+          </button>
+        </div>
+      )}
+
+      {loading && (
+        <div className="ai-loading">
+          <div className="spinner-small"></div>
+          <p>Analyzing your finances...</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="ai-error">
+          <p>{error}</p>
+          <button className="btn-small" onClick={getAdvice}>Try Again</button>
+        </div>
+      )}
+
+      {advice && !loading && (
+        <div className="ai-response">
+          <div className="advice-content">
+            {advice.split('\n').map((line, i) => (
+              line.trim() ? <p key={i}>{line}</p> : null
+            ))}
+          </div>
+          <button className="btn-small btn-outline" onClick={getAdvice}>
+            Get New Tips
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ========== Main Dashboard ==========
 export default function Dashboard() {
   // AUTH: Get user and auth functions
@@ -730,82 +803,86 @@ export default function Dashboard() {
     );
   }
 
-  return (
-    <div className="app">
-      <DataSourceBanner dataStatus={dataStatus} onReset={handleReset} />
+return (
+  <div className="app">
+    <DataSourceBanner dataStatus={dataStatus} onReset={handleReset} />
 
-      <header className="header">
-        <div className="header-content">
-          {/* AUTH: Header with user info and sign out */}
-          <div className="header-top">
-            <h1>Trust Spend</h1>
-            <div className="user-menu">
-              <span className="user-email">{user?.email}</span>
-              <button onClick={handleSignOut} className="btn-small btn-outline">Sign Out</button>
+    <header className="header">
+      <div className="header-content">
+        <div className="header-top">
+          <h1>Trust Spend</h1>
+          <div className="user-menu">
+            <span className="user-email">{user?.email}</span>
+            <button onClick={handleSignOut} className="btn-small btn-outline">Sign Out</button>
+          </div>
+        </div>
+        <p>AI-powered insights to transform your spending habits</p>
+
+        {/* Time Range Selector */}
+        <div className="mode-toggle" style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button
+            className={`btn-small ${mode === 'this_month' ? 'active' : ''}`}
+            onClick={() => handleModeChange('this_month')}
+            disabled={loading}
+            type="button"
+          >
+            This Month
+          </button>
+          <button
+            className={`btn-small ${mode === 'last_month' ? 'active' : ''}`}
+            onClick={() => handleModeChange('last_month')}
+            disabled={loading}
+            type="button"
+          >
+            Last Month
+          </button>
+          <button
+            className={`btn-small ${mode === 'ytd' ? 'active' : ''}`}
+            onClick={() => handleModeChange('ytd')}
+            disabled={loading}
+            type="button"
+          >
+            Year to Date
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div className="main-layout">
+      <div className="main-content">
+        {loading ? (
+          <div className="loading-screen">
+            <div className="spinner"></div>
+            <p>Loading your financial data...</p>
+          </div>
+        ) : (
+          <main className="dashboard">
+            <SummaryCards stats={summary?.stats} />
+
+            <div className="charts-row">
+              <CategoryChart categories={summary?.categories} />
+              <TimelineChart timeline={timeline?.data} mode={mode} />
             </div>
-          </div>
-          <p>AI-powered insights to transform your spending habits</p>
 
-          {/* Time Range Selector */}
-          <div className="mode-toggle" style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button
-              className={`btn-small ${mode === 'this_month' ? 'active' : ''}`}
-              onClick={() => handleModeChange('this_month')}
-              disabled={loading}
-              type="button"
-            >
-              This Month
-            </button>
-            <button
-              className={`btn-small ${mode === 'last_month' ? 'active' : ''}`}
-              onClick={() => handleModeChange('last_month')}
-              disabled={loading}
-              type="button"
-            >
-              Last Month
-            </button>
-            <button
-              className={`btn-small ${mode === 'ytd' ? 'active' : ''}`}
-              onClick={() => handleModeChange('ytd')}
-              disabled={loading}
-              type="button"
-            >
-              Year to Date
-            </button>
-          </div>
-        </div>
+            <div className="insights-grid">
+              <SpendingHabits data={spending} />
+              <Subscriptions data={subscriptions} />
+              <Anomalies data={anomalies} />
+              <GoalTracker onCalculate={handleGoalCalculate} goalData={goalData} />
+            </div>
+          </main>
+        )}
+      </div>
 
-        {/* AUTH: Pass authFetch to FileUpload */}
+      <aside className="right-sidebar">
         <FileUpload onUploadSuccess={handleUploadSuccess} dataStatus={dataStatus} authFetch={authFetch} />
-      </header>
-
-      {loading ? (
-        <div className="loading-screen">
-          <div className="spinner"></div>
-          <p>Loading your financial data...</p>
-        </div>
-      ) : (
-        <main className="dashboard">
-          <SummaryCards stats={summary?.stats} />
-
-          <div className="charts-row">
-            <CategoryChart categories={summary?.categories} />
-            <TimelineChart timeline={timeline?.data} mode={mode} />
-
-          </div>
-
-          <div className="insights-grid">
-            <SpendingHabits data={spending} />
-            <Subscriptions data={subscriptions} />
-            <Anomalies data={anomalies} />
-            <GoalTracker onCalculate={handleGoalCalculate} goalData={goalData} />
-          </div>
-        </main>
-      )}
-
-      <footer className="footer">
-        <p>🔒 Your data is encrypted • Secure login • Never shared with third parties</p>
-      </footer>
+        {!loading && <AIAdvice authFetch={authFetch} mode={mode} />}
+      </aside>
     </div>
-  );
+
+    <footer className="footer">
+      <p>🔒 Your data is encrypted • Secure login • Never shared with third parties</p>
+    </footer>
+  </div>
+);
 }

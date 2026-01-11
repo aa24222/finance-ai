@@ -955,6 +955,130 @@ body {
 }
 
 
+/* ========== AI Advice ========== */
+
+.main-layout {
+  display: flex;
+  gap: 1.5rem;
+  padding-right: 1.5rem;
+  background: transparent;
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+}
+
+
+.right-sidebar {
+  width: 400px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 3rem;
+  align-self: flex-start;
+  background: transparent;
+}
+
+.right-sidebar .upload-section {
+  margin: 0;
+  margin-top: -1.5rem;
+}
+
+.ai-advice-card {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border: 1px solid #0d9488;
+  border-radius: 12px;
+  padding: 1.25rem;
+  min-height: 450px;
+}
+
+.ai-prompt {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.ai-prompt p {
+  color: #94a3b8;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.ai-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 0;
+  color: #94a3b8;
+}
+
+.spinner-small {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #1e293b;
+  border-top-color: #0d9488;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.ai-error {
+  text-align: center;
+  color: #f87171;
+  padding: 1rem 0;
+  font-size: 0.9rem;
+}
+
+.ai-error p {
+  margin-bottom: 0.75rem;
+}
+
+.ai-response {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.advice-content {
+  background: rgba(13, 148, 136, 0.1);
+  border-radius: 8px;
+  padding: 1rem;
+  border-left: 3px solid #0d9488;
+  max-height: 500px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.advice-content p {
+  margin: 0.5rem 0;
+}
+
+.ai-response .btn-outline {
+  align-self: flex-start;
+}
+
+@media (max-width: 1024px) {
+  .main-layout {
+    flex-direction: column;
+  }
+  
+  .right-sidebar {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  
+  .right-sidebar > * {
+    flex: 1;
+    min-width: 280px;
+  }
+  
+  .ai-advice-card {
+    min-height: auto;
+  }
+}
 /* ========== Loading & Error States ========== */
 .loading-screen,
 .error-screen {
