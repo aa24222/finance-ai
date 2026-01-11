@@ -43,7 +43,10 @@ class FinancialAnalyzer:
         self.df = self.df.dropna(subset=['date', 'amount'])
         self.df = self.df.sort_values('date').reset_index(drop=True)
 
+    # ========== SHARED HELPERS ==========
+
     def _filter_by_mode(self, mode='ytd'):
+        """Filter dataframe by time mode: ytd, this_month, last_month"""
         df = self.df
         if df.empty:
             return df
@@ -68,6 +71,33 @@ class FinancialAnalyzer:
         end = anchor + pd.offsets.Day(1)
         return df[(df['date'] >= start) & (df['date'] < end)].copy()
 
+    def _get_time_window(self, df):
+        """
+        Calculate time window metrics for a dataframe.
+        Returns: (days, months, weeks)
+        """
+        if df.empty:
+            return 0, 1.0, 1.0
+        days = int((df['date'].max() - df['date'].min()).days)
+        months = max(1.0, days / 30.0)
+        weeks = max(1.0, days / 7.0)
+        return days, months, weeks
+
+    def _get_debits(self, df, exclude_recurring=False):
+        """
+        Get debit transactions from dataframe.
+        Args:
+            df: DataFrame to filter
+            exclude_recurring: If True, excludes bills and subscriptions
+        Returns: Filtered DataFrame of debits
+        """
+        debits = df[df['type'] == 'debit'].copy()
+        if exclude_recurring:
+            debits = debits[~debits['transaction_tag'].isin(['bill', 'subscription'])]
+        return debits
+
+    # ========== SUMMARY STATS ==========
+
     def get_summary_stats(self, mode='ytd'):
         """Get overall financial summary"""
         df = self._filter_by_mode(mode)
@@ -83,11 +113,11 @@ class FinancialAnalyzer:
 
         # Separate credits/debits
         income = float(df.loc[df['type'] == 'credit', 'amount'].sum())
-        spending = float(df.loc[df['type'] == 'debit', 'amount'].abs().sum())
+        debits = self._get_debits(df)
+        spending = float(debits['amount'].abs().sum())
 
         # Time window math
-        days = int((df['date'].max() - df['date'].min()).days)
-        months = max(1.0, days / 30.0)
+        days, months, _ = self._get_time_window(df)
 
         return {
             'total_income': income,
@@ -98,19 +128,19 @@ class FinancialAnalyzer:
             'date_range': {
                 'start': str(df['date'].min().date()),
                 'end': str(df['date'].max().date()),
-                'days': int(days),
+                'days': days,
             },
         }
 
     def get_spending_by_category(self, mode='ytd'):
         """Get spending breakdown by category"""
         df = self._filter_by_mode(mode)
-        debit = df[df['type'] == 'debit']
-        if debit.empty:
+        debits = self._get_debits(df)
+        if debits.empty:
             return []
 
         # Sum by category
-        spending = debit.groupby('category')['amount'].sum().abs()
+        spending = debits.groupby('category')['amount'].sum().abs()
         total = float(spending.sum()) or 0.0
 
         out = []
@@ -124,26 +154,24 @@ class FinancialAnalyzer:
         return out
 
     # ========== FEATURE 1: Spending Habits Detection ==========
+
     def detect_spending_habits(self, mode='ytd'):
         """
-        Finds frequent small-transaction habits using data-driven analysis
+        Finds frequent small-transaction habits using data-driven analysis.
         Detects patterns like coffee shops, fast food, convenience stores, etc.
         """
         df = self._filter_by_mode(mode)
+        debits = self._get_debits(df, exclude_recurring=True)
 
-        # Focus on "habit-sized" debits and ignore bills/subscriptions
-        small = df[
-            (df['type'] == 'debit') &
-            (df['amount'].abs().between(3, 25)) &
-            (~df['transaction_tag'].isin(['bill', 'subscription']))
-        ]
+        # Focus on "habit-sized" debits ($3-$25)
+        small = debits[debits['amount'].abs().between(3, 25)]
         if small.empty:
             return None
 
         # Merchant rollup
         stats = small.groupby('merchant').agg(
             visits=('amount', 'count'),
-            avg_amount=('amount', 'mean'),
+            avg_amount=('amount', lambda x: x.abs().mean()),
             total=('amount', 'sum'),
         ).reset_index()
         stats['total'] = stats['total'].abs()
@@ -156,9 +184,7 @@ class FinancialAnalyzer:
         # Pick the strongest habit signal
         top = stats.sort_values(['visits', 'total'], ascending=False).iloc[0]
 
-        days = int((df['date'].max() - df['date'].min()).days) if not df.empty else 0
-        months = max(1.0, days / 30.0)
-        weeks = max(1.0, days / 7.0)
+        days, months, weeks = self._get_time_window(df)
 
         monthly_avg = float(top['total'] / months)
         weekly_frequency = float(top['visits'] / weeks)
@@ -182,28 +208,33 @@ class FinancialAnalyzer:
         }
 
     # ========== AI FEATURE: Anomaly Detection ==========
+
     def detect_anomalies(self, contamination=0.05, mode='ytd'):
         """
-        Uses Isolation Forest (AI) to detect unusual transactions
-        Identifies fraud, errors, or unexpected charges automatically
+        Uses Isolation Forest (AI) to detect unusual transactions.
+        Identifies fraud, errors, or unexpected charges automatically.
         """
         df = self._filter_by_mode(mode)
-        tx = df[(df['type'] == 'debit') & df['amount'].notna()].copy()
-        if tx.shape[0] < 10:
+        all_debits = self._get_debits(df)
+
+        if all_debits.shape[0] < 10:
             return None
 
         # Work in absolute space for modeling
-        tx['amount_abs'] = tx['amount'].abs()
+        all_debits['amount_abs'] = all_debits['amount'].abs()
 
         # Exclude bills/subscriptions from anomaly modeling
-        model_tx = tx[~tx['transaction_tag'].isin(['bill', 'subscription'])].copy()
+        model_tx = self._get_debits(df, exclude_recurring=True)
         if model_tx.shape[0] < 10:
             return {
                 'found': False,
                 'message': 'Not enough non-recurring data for anomaly detection',
                 'ml_model': 'Isolation Forest',
-                'recurring_bills': self._get_tagged_bills(tx),
+                'recurring_bills': self._get_tagged_bills(all_debits),
             }
+
+        model_tx = model_tx.copy()
+        model_tx['amount_abs'] = model_tx['amount'].abs()
 
         # Feature engineering
         model_tx = model_tx.sort_values('date').reset_index(drop=True)
@@ -242,7 +273,7 @@ class FinancialAnalyzer:
         model_tx['anomaly_score'] = iso.score_samples(X)
 
         anomalies = model_tx[model_tx['anomaly'] == -1].copy()
-        recurring_bills = self._get_tagged_bills(tx)
+        recurring_bills = self._get_tagged_bills(all_debits)
 
         if anomalies.empty:
             return {
@@ -334,7 +365,7 @@ class FinancialAnalyzer:
         }
 
     def _get_tagged_bills(self, debit_df):
-        # Summarize recurring bills using the CSV tag
+        """Summarize recurring bills using the CSV tag"""
         bills = debit_df[debit_df['transaction_tag'] == 'bill'].copy()
         if bills.empty:
             return []
@@ -358,65 +389,86 @@ class FinancialAnalyzer:
         return out
 
     # ========== FEATURE 2: Subscription Detector ==========
+
     def detect_subscriptions(self, mode='ytd'):
         """
         Uses transaction labels to identify subscriptions.
         """
         df = self._filter_by_mode(mode)
-        debit = df[df['type'] == 'debit'].copy()
-        if debit.empty:
-            return {
-                'subscriptions': [],
-                'total_count': 0,
-                'total_monthly_cost': 0.0,
-                'total_annual_cost': 0.0,
-                'unused_count': 0,
-                'unused_monthly_waste': 0.0,
-                'unused_annual_waste': 0.0,
-                'insight': 'No subscriptions detected.',
-            }
+        debits = self._get_debits(df)
 
-        subs = debit[debit['transaction_tag'] == 'subscription'].copy()
+        empty_result = {
+            'subscriptions': [],
+            'total_count': 0,
+            'total_monthly_cost': 0.0,
+            'total_annual_cost': 0.0,
+            'review_count': 0,
+            'review_monthly_amount': 0.0,
+            'review_annual_amount': 0.0,
+            'insight': 'No subscriptions detected.',
+        }
+
+        if debits.empty:
+            return empty_result
+
+        subs = debits[debits['transaction_tag'] == 'subscription'].copy()
         if subs.empty:
-            return {
-                'subscriptions': [],
-                'total_count': 0,
-                'total_monthly_cost': 0.0,
-                'total_annual_cost': 0.0,
-                'unused_count': 0,
-                'unused_monthly_waste': 0.0,
-                'unused_annual_waste': 0.0,
-                'insight': 'No subscriptions detected.',
-            }
+            return empty_result
 
+        # Normalize amounts
         subs['amount_abs'] = subs['amount'].abs()
         max_date = subs['date'].max()
 
+        # Keep a stable "lookback" window for explainable flags
+        lookback_days = 185  # ~6 months
+        cutoff = max_date - pd.Timedelta(days=lookback_days)
+
+        def _service_type(merchant):
+            m = str(merchant or '').strip().lower()
+            if not m:
+                return None
+
+            stream = ['netflix', 'hulu', 'disney', 'prime video', 'amazon prime video', 'max', 'hbo', 'paramount', 'peacock', 'apple tv', 'youtube premium']
+            if any(k in m for k in stream):
+                return 'streaming'
+
+            music = ['spotify', 'apple music', 'pandora', 'tidal', 'soundcloud', 'youtube music']
+            if any(k in m for k in music):
+                return 'music'
+
+            cloud = ['dropbox', 'google one', 'google drive', 'icloud', 'one drive', 'onedrive', 'box']
+            if any(k in m for k in cloud):
+                return 'cloud'
+
+            return None
+
         results = []
         total_monthly = 0.0
-        unused_monthly = 0.0
 
+        # First pass: per-merchant subscription stats
         for merchant, g in subs.groupby('merchant'):
-            # Use median to tolerate small price changes
             g = g.sort_values('date')
             monthly_cost = float(np.median(g['amount_abs']))
             annual_cost = float(monthly_cost * 12)
 
-            # Recentness heuristic (stale subscriptions look "unused")
             last_charge = g['date'].max()
-            days_since = int((max_date - last_charge).days)
 
-            # Trial → paid signal (multiple distinct price points)
-            amounts = g['amount_abs'].round(2)
-            uniq = sorted(amounts.unique().tolist())
-            trial_to_paid = False
-            if len(uniq) >= 2:
-                lo, hi = float(uniq[0]), float(uniq[-1])
-                if lo == 0.0 or (hi > 0 and lo / hi <= 0.5):
-                    trial_to_paid = True
+            # Explainable review flags
+            reasons = []
 
-            # Minimal "cancel suggestion" logic (demo-friendly)
-            likely_unused = (days_since >= 20) or (len(g) <= 1)
+            # Price increase: compare early vs recent within lookback window
+            g6 = g[g['date'] >= cutoff].copy()
+            if len(g6) >= 2:
+                first = float(np.median(g6['amount_abs'].head(2)))
+                last = float(np.median(g6['amount_abs'].tail(2)))
+                if first > 0:
+                    pct = (last - first) / first
+                    if pct >= 0.20 and (last - first) >= 2.0:
+                        reasons.append(f"price increased ({first:.2f} → {last:.2f})")
+            else:
+                reasons.append("only 1 charge in 6 months")
+
+            service_type = _service_type(merchant)
 
             results.append({
                 'merchant': merchant,
@@ -424,53 +476,86 @@ class FinancialAnalyzer:
                 'annual_cost': annual_cost,
                 'occurrences': int(len(g)),
                 'last_charge_date': last_charge.date().isoformat(),
-                'trial_to_paid': bool(trial_to_paid),
-                'likely_unused': bool(likely_unused),
+                'service_type': service_type,
+                'needs_review': False,
+                'review_reasons': [],
                 'tag': 'SUBSCRIPTION',
             })
 
             total_monthly += monthly_cost
-            if likely_unused:
-                unused_monthly += monthly_cost
+
+        # Second pass: overlap flags (duplicate/overlapping services)
+        by_type = {}
+        for r in results:
+            t = r.get('service_type')
+            if not t:
+                continue
+            by_type.setdefault(t, []).append(r['merchant'])
+
+        overlaps = {t: merchants for t, merchants in by_type.items() if len(set(merchants)) >= 2}
+        for r in results:
+            t = r.get('service_type')
+            if t in overlaps:
+                r['review_reasons'].append(f"overlap with {t} services")
+
+        # Subscription burden: compare to total spending in window
+        days, months, _ = self._get_time_window(df)
+        monthly_spending = float(debits['amount'].abs().sum() / months) if months > 0 else 0.0
+        burden_pct = float((total_monthly / monthly_spending) * 100) if monthly_spending > 0 else 0.0
+        burden_high = bool(monthly_spending > 0 and burden_pct >= 14.0)
+
+        if burden_high:
+            for r in results:
+                r['review_reasons'].append(f"subscriptions are {burden_pct:.0f}% of spending")
+
+        # Finalize needs_review flag + totals
+        review_monthly = 0.0
+        review_count = 0
+        for r in results:
+            if r['review_reasons']:
+                r['needs_review'] = True
+                review_count += 1
+                review_monthly += float(r['monthly_cost'])
 
         # Sort by monthly impact
         results.sort(key=lambda r: -r['monthly_cost'])
 
-        unused_count = sum(1 for r in results if r['likely_unused'])
-        trial_count = sum(1 for r in results if r.get('trial_to_paid'))
-
         extra = []
-        if trial_count:
-            extra.append(f"{trial_count} look like trial→paid conversions")
-        if unused_count:
-            extra.append(f"{unused_count} may be worth reviewing")
-        extra_text = (" (" + "; ".join(extra) + ")") if extra else ""
+        if overlaps:
+            extra.append("duplicate/overlapping services")
+        if any("price increased" in rr for r in results for rr in r.get('review_reasons', [])):
+            extra.append("price increases")
+        if burden_high:
+            extra.append("high subscription burden")
+        extra_text = (" (flagged for: " + "; ".join(extra) + ")") if extra else ""
 
         return {
             'subscriptions': results,
             'total_count': int(len(results)),
             'total_monthly_cost': float(total_monthly),
             'total_annual_cost': float(total_monthly * 12.0),
-            'unused_count': int(unused_count),
-            'unused_monthly_waste': float(unused_monthly),
-            'unused_annual_waste': float(unused_monthly * 12.0),
-            'insight': f"Found {len(results)} subscriptions totaling ${total_monthly:.2f}/month{extra_text}.",
+            'review_count': int(review_count),
+            'review_monthly_amount': float(review_monthly),
+            'review_annual_amount': float(review_monthly * 12.0),
+            'subscription_burden_pct': float(burden_pct),
+            'subscription_burden_high': bool(burden_high),
         }
 
     # ========== FEATURE 3: Goal Forecasting ==========
+
     def forecast_goal(self, goal_amount, goal_months, mode='ytd'):
         """
-        Uses Linear Regression ML to forecast whether user will reach savings goal
-        Provides AI-powered predictions based on spending trends
+        Uses Linear Regression ML to forecast whether user will reach savings goal.
+        Provides AI-powered predictions based on spending trends.
         """
         df = self._filter_by_mode(mode)
         if df.empty:
             return self._forecast_goal_simple(goal_amount, goal_months, mode)
 
         # Monthly spending
-        debit = df[df['type'] == 'debit'].copy()
-        debit['month'] = debit['date'].dt.to_period('M')
-        monthly_spending = debit.groupby('month')['amount'].sum().abs().reset_index()
+        debits = self._get_debits(df)
+        debits['month'] = debits['date'].dt.to_period('M')
+        monthly_spending = debits.groupby('month')['amount'].sum().abs().reset_index()
         monthly_spending.columns = ['month', 'spending']
         monthly_spending['month_num'] = range(len(monthly_spending))
 
@@ -489,7 +574,7 @@ class FinancialAnalyzer:
         if len(monthly) < 2:
             return self._forecast_goal_simple(goal_amount, goal_months, mode)
 
-        # Fit savings trend (simple, demo-friendly)
+        # Fit savings trend
         X = monthly[['month_num']].values
         y_spending = monthly['spending'].values
         y_savings = monthly['savings'].values
@@ -531,10 +616,10 @@ class FinancialAnalyzer:
             total_potential_savings += saving
 
         subs_data = self.detect_subscriptions(mode)
-        if subs_data.get('unused_monthly_waste', 0) > 0:
-            saving = float(subs_data['unused_monthly_waste'])
+        if subs_data.get('review_monthly_amount', 0) > 0:
+            saving = float(subs_data['review_monthly_amount'])
             recommendations.append({
-                'action': f"Review/cancel {subs_data['unused_count']} subscription(s)",
+                'action': f"Review/cancel {subs_data['review_count']} subscription(s)",
                 'monthly_savings': saving,
                 'annual_savings': float(saving * 12),
                 'impact_percentage': float(saving / monthly_gap * 100) if monthly_gap > 0 else 100,
@@ -544,8 +629,7 @@ class FinancialAnalyzer:
 
         dining_cat = next((c for c in self.get_spending_by_category(mode) if c['category'] == 'Dining Out'), None)
         if dining_cat:
-            days = int((df['date'].max() - df['date'].min()).days)
-            months = max(1.0, days / 30.0)
+            days, months, _ = self._get_time_window(df)
             monthly_dining = float(dining_cat['amount'] / months)
             if monthly_dining > 150:
                 saving = float(monthly_dining * 0.25)
@@ -609,12 +693,11 @@ class FinancialAnalyzer:
         }
 
     def _forecast_goal_simple(self, goal_amount, goal_months, mode='ytd'):
-        """
-        Fallback to simple averaging if not enough data for ML
-        """
+        """Fallback to simple averaging if not enough data for ML"""
         df = self._filter_by_mode(mode)
+        required = float(goal_amount) / max(1, int(goal_months))
+
         if df.empty:
-            required = float(goal_amount) / max(1, int(goal_months))
             return {
                 'goal_amount': float(goal_amount),
                 'goal_months': int(goal_months),
@@ -640,18 +723,17 @@ class FinancialAnalyzer:
             }
 
         # Compute averages over the observed window
-        days = int((df['date'].max() - df['date'].min()).days)
-        months = max(1.0, days / 30.0)
+        days, months, _ = self._get_time_window(df)
 
         total_income = float(df.loc[df['type'] == 'credit', 'amount'].sum())
-        total_spending = float(df.loc[df['type'] == 'debit', 'amount'].abs().sum())
+        debits = self._get_debits(df)
+        total_spending = float(debits['amount'].abs().sum())
 
         monthly_income = total_income / months
         monthly_spending = total_spending / months
         current_monthly_savings = monthly_income - monthly_spending
 
-        required_monthly_savings = float(goal_amount) / max(1, int(goal_months))
-        monthly_gap = required_monthly_savings - current_monthly_savings
+        monthly_gap = required - current_monthly_savings
 
         projected_total_savings = current_monthly_savings * int(goal_months)
         will_reach_goal = bool(projected_total_savings >= float(goal_amount))
@@ -663,7 +745,7 @@ class FinancialAnalyzer:
             'current_monthly_income': float(monthly_income),
             'current_monthly_spending': float(monthly_spending),
             'current_monthly_savings': float(current_monthly_savings),
-            'required_monthly_savings': float(required_monthly_savings),
+            'required_monthly_savings': float(required),
             'monthly_gap': float(monthly_gap),
             'projected_total': float(projected_total_savings),
             'shortfall': float(shortfall),
@@ -702,24 +784,26 @@ class FinancialAnalyzer:
             f"Our AI recommendations could save ${potential:.2f}/month, getting you closer to your goal!"
         )
 
+    # ========== TIMELINE & TRENDS ==========
+
     def get_timeline_data(self, mode='ytd'):
         """Get daily spending for timeline charts"""
         df = self._filter_by_mode(mode)
-        df = df[df['type'] == 'debit'].copy()
-        if df.empty:
+        debits = self._get_debits(df)
+        if debits.empty:
             return []
 
-        daily = df.groupby(df['date'].dt.date)['amount'].sum().abs()
+        daily = debits.groupby(debits['date'].dt.date)['amount'].sum().abs()
         return [{'date': str(d), 'amount': float(a)} for d, a in daily.items()]
 
     def get_category_trends(self, mode='ytd'):
         """Get spending trends by category over time"""
         df = self._filter_by_mode(mode)
-        df_debit = df[df['type'] == 'debit'].copy()
-        if df_debit.empty:
+        debits = self._get_debits(df)
+        if debits.empty:
             return []
 
-        df_debit['month'] = df_debit['date'].dt.to_period('M')
-        monthly = df_debit.groupby(['month', 'category'])['amount'].sum().abs().reset_index()
+        debits['month'] = debits['date'].dt.to_period('M')
+        monthly = debits.groupby(['month', 'category'])['amount'].sum().abs().reset_index()
         monthly['month'] = monthly['month'].astype(str)
         return monthly.to_dict('records')
