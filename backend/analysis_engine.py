@@ -43,9 +43,34 @@ class FinancialAnalyzer:
         self.df = self.df.dropna(subset=['date', 'amount'])
         self.df = self.df.sort_values('date').reset_index(drop=True)
 
-    def get_summary_stats(self):
-        """Get overall financial summary"""
+    def _filter_by_mode(self, mode='ytd'):
         df = self.df
+        if df.empty:
+            return df
+
+        mode = (mode or 'ytd').strip().lower()
+
+        # Use dataset max date as "today" for consistent demo behavior
+        anchor = df['date'].max().normalize()
+
+        if mode == 'this_month':
+            start = anchor.replace(day=1)
+            end = start + pd.offsets.MonthBegin(1)
+            return df[(df['date'] >= start) & (df['date'] < end)].copy()
+
+        if mode == 'last_month':
+            this_start = anchor.replace(day=1)
+            last_start = this_start - pd.offsets.MonthBegin(1)
+            return df[(df['date'] >= last_start) & (df['date'] < this_start)].copy()
+
+        # year_to_date (default)
+        start = anchor.replace(month=1, day=1)
+        end = anchor + pd.offsets.Day(1)
+        return df[(df['date'] >= start) & (df['date'] < end)].copy()
+
+    def get_summary_stats(self, mode='ytd'):
+        """Get overall financial summary"""
+        df = self._filter_by_mode(mode)
         if df.empty:
             return {
                 'total_income': 0.0,
@@ -77,9 +102,9 @@ class FinancialAnalyzer:
             },
         }
 
-    def get_spending_by_category(self):
+    def get_spending_by_category(self, mode='ytd'):
         """Get spending breakdown by category"""
-        df = self.df
+        df = self._filter_by_mode(mode)
         debit = df[df['type'] == 'debit']
         if debit.empty:
             return []
@@ -99,12 +124,12 @@ class FinancialAnalyzer:
         return out
 
     # ========== FEATURE 1: Spending Habits Detection ==========
-    def detect_spending_habits(self):
+    def detect_spending_habits(self, mode='ytd'):
         """
         Finds frequent small-transaction habits using data-driven analysis
         Detects patterns like coffee shops, fast food, convenience stores, etc.
         """
-        df = self.df
+        df = self._filter_by_mode(mode)
 
         # Focus on "habit-sized" debits and ignore bills/subscriptions
         small = df[
@@ -157,12 +182,12 @@ class FinancialAnalyzer:
         }
 
     # ========== AI FEATURE: Anomaly Detection ==========
-    def detect_anomalies(self, contamination=0.05):
+    def detect_anomalies(self, contamination=0.05, mode='ytd'):
         """
         Uses Isolation Forest (AI) to detect unusual transactions
         Identifies fraud, errors, or unexpected charges automatically
         """
-        df = self.df
+        df = self._filter_by_mode(mode)
         tx = df[(df['type'] == 'debit') & df['amount'].notna()].copy()
         if tx.shape[0] < 10:
             return None
@@ -333,11 +358,11 @@ class FinancialAnalyzer:
         return out
 
     # ========== FEATURE 2: Subscription Detector ==========
-    def detect_subscriptions(self):
+    def detect_subscriptions(self, mode='ytd'):
         """
         Uses transaction labels to identify subscriptions.
         """
-        df = self.df
+        df = self._filter_by_mode(mode)
         debit = df[df['type'] == 'debit'].copy()
         if debit.empty:
             return {
@@ -393,7 +418,6 @@ class FinancialAnalyzer:
             # Minimal "cancel suggestion" logic (demo-friendly)
             likely_unused = (days_since >= 20) or (len(g) <= 1)
 
-
             results.append({
                 'merchant': merchant,
                 'monthly_cost': monthly_cost,
@@ -434,14 +458,14 @@ class FinancialAnalyzer:
         }
 
     # ========== FEATURE 3: Goal Forecasting ==========
-    def forecast_goal(self, goal_amount, goal_months):
+    def forecast_goal(self, goal_amount, goal_months, mode='ytd'):
         """
         Uses Linear Regression ML to forecast whether user will reach savings goal
         Provides AI-powered predictions based on spending trends
         """
-        df = self.df
+        df = self._filter_by_mode(mode)
         if df.empty:
-            return self._forecast_goal_simple(goal_amount, goal_months)
+            return self._forecast_goal_simple(goal_amount, goal_months, mode)
 
         # Monthly spending
         debit = df[df['type'] == 'debit'].copy()
@@ -463,7 +487,7 @@ class FinancialAnalyzer:
 
         # Need at least 2 months for a trend
         if len(monthly) < 2:
-            return self._forecast_goal_simple(goal_amount, goal_months)
+            return self._forecast_goal_simple(goal_amount, goal_months, mode)
 
         # Fit savings trend (simple, demo-friendly)
         X = monthly[['month_num']].values
@@ -494,7 +518,7 @@ class FinancialAnalyzer:
         recommendations = []
         total_potential_savings = 0.0
 
-        spending_data = self.detect_spending_habits()
+        spending_data = self.detect_spending_habits(mode)
         if spending_data and spending_data['monthly_average'] > 40:
             saving = float(spending_data['monthly_average'] * 0.5)
             recommendations.append({
@@ -506,7 +530,7 @@ class FinancialAnalyzer:
             })
             total_potential_savings += saving
 
-        subs_data = self.detect_subscriptions()
+        subs_data = self.detect_subscriptions(mode)
         if subs_data.get('unused_monthly_waste', 0) > 0:
             saving = float(subs_data['unused_monthly_waste'])
             recommendations.append({
@@ -518,7 +542,7 @@ class FinancialAnalyzer:
             })
             total_potential_savings += saving
 
-        dining_cat = next((c for c in self.get_spending_by_category() if c['category'] == 'Dining Out'), None)
+        dining_cat = next((c for c in self.get_spending_by_category(mode) if c['category'] == 'Dining Out'), None)
         if dining_cat:
             days = int((df['date'].max() - df['date'].min()).days)
             months = max(1.0, days / 30.0)
@@ -584,11 +608,11 @@ class FinancialAnalyzer:
             ),
         }
 
-    def _forecast_goal_simple(self, goal_amount, goal_months):
+    def _forecast_goal_simple(self, goal_amount, goal_months, mode='ytd'):
         """
         Fallback to simple averaging if not enough data for ML
         """
-        df = self.df
+        df = self._filter_by_mode(mode)
         if df.empty:
             required = float(goal_amount) / max(1, int(goal_months))
             return {
@@ -678,18 +702,20 @@ class FinancialAnalyzer:
             f"Our AI recommendations could save ${potential:.2f}/month, getting you closer to your goal!"
         )
 
-    def get_timeline_data(self):
+    def get_timeline_data(self, mode='ytd'):
         """Get daily spending for timeline charts"""
-        df = self.df[self.df['type'] == 'debit'].copy()
+        df = self._filter_by_mode(mode)
+        df = df[df['type'] == 'debit'].copy()
         if df.empty:
             return []
 
         daily = df.groupby(df['date'].dt.date)['amount'].sum().abs()
         return [{'date': str(d), 'amount': float(a)} for d, a in daily.items()]
 
-    def get_category_trends(self):
+    def get_category_trends(self, mode='ytd'):
         """Get spending trends by category over time"""
-        df_debit = self.df[self.df['type'] == 'debit'].copy()
+        df = self._filter_by_mode(mode)
+        df_debit = df[df['type'] == 'debit'].copy()
         if df_debit.empty:
             return []
 

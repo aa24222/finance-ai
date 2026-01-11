@@ -74,6 +74,29 @@ def load_analyzer(file_path, source_name='demo', file_name=None):
         return False
 
 
+def get_mode_from_request():
+    mode = request.args.get('mode', 'ytd')
+    mode = (mode or 'ytd').strip().lower()
+
+    # Normalize common aliases
+    if mode in ('year_to_date', 'year-to-date', 'ytd'):
+        mode = 'ytd'
+    elif mode in ('this_month', 'this-month'):
+        mode = 'this_month'
+    elif mode in ('last_month', 'last-month'):
+        mode = 'last_month'
+
+    allowed = {'this_month', 'last_month', 'ytd'}
+    if mode not in allowed:
+        return None, jsonify({
+            'success': False,
+            'error': 'Invalid mode. Use one of: this_month, last_month, ytd',
+            'allowed_modes': ['this_month', 'last_month', 'ytd'],
+        }), 400
+
+    return mode, None, None
+
+
 # Initialize with demo data on startup
 load_analyzer(DEMO_DATA_PATH, 'demo', os.path.basename(DEMO_DATA_PATH))
 
@@ -176,7 +199,11 @@ def data_status():
                 'date_range': None,
             })
 
-        stats = analyzer.get_summary_stats()
+        mode, err_resp, err_code = get_mode_from_request()
+        if err_resp:
+            return err_resp, err_code
+
+        stats = analyzer.get_summary_stats(mode=mode)
         row_count = int(getattr(analyzer, 'df', []).shape[0]) if hasattr(analyzer, 'df') else 0
 
         return jsonify({
@@ -186,6 +213,7 @@ def data_status():
             'file_name': current_file_name,
             'row_count': row_count,
             'date_range': stats.get('date_range'),
+            'mode': mode,
         })
     except Exception as e:
         print(f"Error in /api/data/status: {traceback.format_exc()}")
@@ -254,13 +282,18 @@ def get_summary():
         return guard
 
     try:
-        stats = analyzer.get_summary_stats()
-        categories = analyzer.get_spending_by_category()
+        mode, err_resp, err_code = get_mode_from_request()
+        if err_resp:
+            return err_resp, err_code
+
+        stats = analyzer.get_summary_stats(mode=mode)
+        categories = analyzer.get_spending_by_category(mode=mode)
         return jsonify({
             'success': True,
             'stats': stats,
             'categories': categories,
             'data_source': current_data_source,
+            'mode': mode,
         })
     except Exception as e:
         print(f"Error in /api/summary: {traceback.format_exc()}")
@@ -275,10 +308,14 @@ def get_spending_insights():
         return guard
 
     try:
-        result = analyzer.detect_spending_habits()
+        mode, err_resp, err_code = get_mode_from_request()
+        if err_resp:
+            return err_resp, err_code
+
+        result = analyzer.detect_spending_habits(mode=mode)
         if result is None:
-            return jsonify({'success': True, 'found': False, 'message': 'No frequent spending habits detected'})
-        return jsonify({'success': True, 'found': True, 'data': result})
+            return jsonify({'success': True, 'found': False, 'message': 'No frequent spending habits detected', 'mode': mode})
+        return jsonify({'success': True, 'found': True, 'data': result, 'mode': mode})
     except Exception as e:
         print(f"Error in /api/insights/spending: {traceback.format_exc()}")
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -292,15 +329,19 @@ def get_anomalies():
         return guard
 
     try:
+        mode, err_resp, err_code = get_mode_from_request()
+        if err_resp:
+            return err_resp, err_code
+
         contamination = float(request.args.get('contamination', 0.05))
         if not (0.0 < contamination <= 0.5):
             return jsonify({'success': False, 'error': 'Contamination rate must be between 0 and 0.5'}), 400
 
-        result = analyzer.detect_anomalies(contamination=contamination)
+        result = analyzer.detect_anomalies(contamination=contamination, mode=mode)
         if result is None:
-            return jsonify({'success': True, 'found': False, 'message': 'Not enough data for anomaly detection'})
+            return jsonify({'success': True, 'found': False, 'message': 'Not enough data for anomaly detection', 'mode': mode})
 
-        return jsonify({'success': True, 'found': result.get('found', False), 'data': result})
+        return jsonify({'success': True, 'found': result.get('found', False), 'data': result, 'mode': mode})
     except Exception as e:
         print(f"Error in /api/insights/anomalies: {traceback.format_exc()}")
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -314,8 +355,12 @@ def get_subscriptions():
         return guard
 
     try:
-        result = analyzer.detect_subscriptions()
-        return jsonify({'success': True, 'data': result})
+        mode, err_resp, err_code = get_mode_from_request()
+        if err_resp:
+            return err_resp, err_code
+
+        result = analyzer.detect_subscriptions(mode=mode)
+        return jsonify({'success': True, 'data': result, 'mode': mode})
     except Exception as e:
         print(f"Error in /api/insights/subscriptions: {traceback.format_exc()}")
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -335,6 +380,21 @@ def forecast_goal():
         goal_amount = float(payload.get('goal_amount', 3000))
         goal_months = int(payload.get('goal_months', 10))
 
+        mode = payload.get('mode', request.args.get('mode', 'ytd'))
+        mode = (mode or 'ytd').strip().lower()
+        if mode in ('year_to_date', 'year-to-date', 'ytd'):
+            mode = 'ytd'
+        elif mode in ('this_month', 'this-month'):
+            mode = 'this_month'
+        elif mode in ('last_month', 'last-month'):
+            mode = 'last_month'
+        if mode not in {'this_month', 'last_month', 'ytd'}:
+            return jsonify({
+                'success': False,
+                'error': 'Invalid mode. Use one of: this_month, last_month, ytd',
+                'allowed_modes': ['this_month', 'last_month', 'ytd'],
+            }), 400
+
         # Basic validation
         if goal_amount <= 0 or goal_months <= 0:
             return jsonify({'success': False, 'error': 'Goal amount and months must be positive'}), 400
@@ -344,8 +404,8 @@ def forecast_goal():
             return jsonify({'success': False, 'error': 'Goal timeframe exceeds maximum (10 years)'}), 400
 
         # Run forecast
-        result = analyzer.forecast_goal(goal_amount, goal_months)
-        return jsonify({'success': True, 'data': result})
+        result = analyzer.forecast_goal(goal_amount, goal_months, mode=mode)
+        return jsonify({'success': True, 'data': result, 'mode': mode})
 
     except Exception as e:
         print(f"Error in /api/insights/goal: {traceback.format_exc()}")
@@ -360,8 +420,12 @@ def get_timeline():
         return guard
 
     try:
-        timeline = analyzer.get_timeline_data()
-        return jsonify({'success': True, 'data': timeline})
+        mode, err_resp, err_code = get_mode_from_request()
+        if err_resp:
+            return err_resp, err_code
+
+        timeline = analyzer.get_timeline_data(mode=mode)
+        return jsonify({'success': True, 'data': timeline, 'mode': mode})
     except Exception as e:
         print(f"Error in /api/timeline: {traceback.format_exc()}")
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -375,8 +439,12 @@ def get_trends():
         return guard
 
     try:
-        trends = analyzer.get_category_trends()
-        return jsonify({'success': True, 'data': trends})
+        mode, err_resp, err_code = get_mode_from_request()
+        if err_resp:
+            return err_resp, err_code
+
+        trends = analyzer.get_category_trends(mode=mode)
+        return jsonify({'success': True, 'data': trends, 'mode': mode})
     except Exception as e:
         print(f"Error in /api/trends: {traceback.format_exc()}")
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -404,19 +472,19 @@ if __name__ == '__main__':
 
     print("\n📋 API Endpoints:")
     print("   GET  /api/health                 - Health check")
-    print("   GET  /api/summary                - Financial summary")
-    print("   GET  /api/insights/spending      - Spending habits analysis")
-    print("   GET  /api/insights/anomalies     - AI anomaly detection")
-    print("   GET  /api/insights/subscriptions - Subscription detector")
-    print("   POST /api/insights/goal          - Goal forecasting")
+    print("   GET  /api/summary                - Financial summary (mode=this_month|last_month|ytd)")
+    print("   GET  /api/insights/spending      - Spending habits analysis (mode=this_month|last_month|ytd)")
+    print("   GET  /api/insights/anomalies     - AI anomaly detection (mode=this_month|last_month|ytd)")
+    print("   GET  /api/insights/subscriptions - Subscription detector (mode=this_month|last_month|ytd)")
+    print("   POST /api/insights/goal          - Goal forecasting (mode in JSON body or ?mode=...)")
     print("   GET  /api/security               - Security & privacy info")
-    print("   GET  /api/timeline               - Daily spending timeline")
-    print("   GET  /api/trends                 - Category trends")
+    print("   GET  /api/timeline               - Daily spending timeline (mode=this_month|last_month|ytd)")
+    print("   GET  /api/trends                 - Category trends (mode=this_month|last_month|ytd)")
 
     print("\n📤 Data Upload Endpoints:")
     print("   POST /api/data/upload            - Upload CSV file")
     print("   POST /api/data/reset             - Reset to demo data")
-    print("   GET  /api/data/status            - Current data source info")
+    print("   GET  /api/data/status            - Current data source info (mode=this_month|last_month|ytd)")
     print("   GET  /api/data/template          - Get CSV format template")
     print("=" * 60 + "\n")
 
