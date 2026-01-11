@@ -1,28 +1,43 @@
 /* ========== CSS Variables ========== */
+/* ========== CSS Variables ========== */
 :root {
-  --bg-primary: #f8fafc;
-  --bg-card: #ffffff;
-  --bg-hover: #f1f5f9;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-  --border: #e2e8f0;
-  --accent: #0d9488;
-  --accent-light: #ccfbf1;
-  --success: #10b981;
-  --success-light: #d1fae5;
+  /* Backgrounds */
+  --bg-primary: #2b2c77;   /* page background */
+  --bg-card: #1d1c52;      /* cards */
+  --bg-hover: #0f1736;     /* hover surfaces */
+
+  /* Text */
+  --text-primary: #eef2ff;     /* near-white */
+  --text-secondary: #b7c3e1;   /* muted */
+  --text-muted: #7f8bb1;       /* softer */
+
+  /* Borders */
+  --border: rgba(255, 255, 255, 0.08);
+
+  /* Accent  */
+  --accent: #22d3ee;
+  --accent-light: rgba(34, 211, 238, 0.14);
+
+  /* Status colors */
+  --success: #22c55e;
+  --success-light: rgba(34, 197, 94, 0.16);
   --warning: #f59e0b;
-  --warning-light: #fef3c7;
-  --danger: #ef4444;
-  --danger-light: #fee2e2;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --warning-light: rgba(245, 158, 11, 0.16);
+  --danger: #fb7185;          /* pink-red fits neon dark UIs */
+  --danger-light: rgba(251, 113, 133, 0.14);
+
+  /* Shadows (glowy + premium, still subtle) */
+  --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 18px 50px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 28px 80px rgba(0, 0, 0, 0.55);
+
+  /* Radius + font (unchanged) */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --font-sans: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
 }
+
 
 /* ========== Reset & Base ========== */
 *, *::before, *::after {
@@ -860,4 +875,141 @@ body {
     flex-direction: column;
     gap: 16px;
   }
+}
+
+/* ========== Dark sleek theme  ========== */
+
+body {
+  background:
+    radial-gradient(1200px 700px at 15% 5%, rgba(124, 58, 237, 0.16), transparent 55%),
+    radial-gradient(900px 600px at 85% 10%, rgba(34, 211, 238, 0.12), transparent 55%),
+    linear-gradient(180deg, #060816 0%, var(--bg-primary) 100%);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Cards */
+.summary-card,
+.chart-card,
+.insight-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+/* */
+.summary-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* Header + footer blend into theme */
+.header,
+.footer {
+  background: rgba(11, 16, 38, 0.65);
+  backdrop-filter: blur(8px);
+  border-color: var(--border);
+}
+
+/* Upload zone */
+.upload-zone {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+.upload-zone:hover,
+.upload-zone.dragging {
+  border-color: rgba(34, 211, 238, 0.55);
+  background: rgba(34, 211, 238, 0.08);
+}
+
+/* Inputs */
+.input-with-prefix,
+.input-with-suffix {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+.input-with-prefix .prefix,
+.input-with-suffix .suffix {
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-muted);
+}
+
+.input-with-prefix:focus-within,
+.input-with-suffix:focus-within,
+.upload-zone:focus-within {
+  border-color: rgba(34, 211, 238, 0.55);
+  box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.12);
+}
+
+/* Buttons*/
+.btn-primary {
+  background: linear-gradient(135deg, #22d3ee 0%, #0ea5e9 55%, #7c3aed 120%);
+  box-shadow: 0 18px 40px rgba(34, 211, 238, 0.14);
+}
+
+.btn-primary:hover {
+  filter: brightness(1.04);
+}
+
+.btn-small {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+/* “Pills” and small surfaces */
+.habit-highlight {
+  background: rgba(34, 211, 238, 0.10);
+}
+
+.habit-visits {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+}
+
+/* Lists:  */
+.sub-item {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.sub-item.unused {
+  background: rgba(245, 158, 11, 0.12);
+}
+
+/* Anomalies:  */
+.anomaly-item {
+  background: rgba(251, 113, 133, 0.10);
+  border-left-color: var(--danger);
+}
+
+.anomaly-amount {
+  color: var(--danger);
+}
+
+/* Progress bar + panels */
+.progress-bar {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.goal-verdict.success {
+  background: rgba(34, 197, 94, 0.14);
+  color: #bbf7d0;
+}
+
+.goal-verdict.warning {
+  background: rgba(245, 158, 11, 0.14);
+  color: #fde68a;
+}
+
+/* Recommendation panel */
+.recommendations,
+.confidence-badge {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Chart grid lines feel lighter */
+.chart-card .recharts-cartesian-grid line {
+  stroke: rgba(255, 255, 255, 0.08);
 }
