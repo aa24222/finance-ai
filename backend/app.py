@@ -14,7 +14,7 @@ app = Flask(__name__)
 # CORS configuration
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["http://localhost:3000", "http://localhost:5173", "https://yourdomain.com"],
+        "origins": ["http://localhost:3000", "http://localhost:5173", "https://finance-ai-five-navy.vercel.app"],
         "methods": ["GET", "POST", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"]
     }
