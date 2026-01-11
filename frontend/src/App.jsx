@@ -219,24 +219,51 @@ function CategoryChart({ categories }) {
 }
 
 // Timeline Chart
-function TimelineChart({ timeline }) {
+function TimelineChart({ timeline, mode }) {
   if (!timeline || timeline.length === 0) return null;
 
-  // Aggregate by week for cleaner visualization
+  const isYtd = mode === 'ytd';
+
+  // Aggregate by month for YTD, by week for month views
   const aggregated = timeline.reduce((acc, item) => {
     const d = new Date(item.date);
     if (Number.isNaN(d.getTime())) return acc;
 
-    const weekStart = new Date(d);
-    weekStart.setDate(d.getDate() - d.getDay());
-    const key = weekStart.toISOString().split('T')[0];
+    let key;
+
+    if (isYtd) {
+      // YYYY-MM (monthly buckets)
+      key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+    } else {
+      // Weekly buckets (Sunday week start)
+      const weekStart = new Date(d);
+      weekStart.setDate(d.getDate() - d.getDay());
+      key = weekStart.toISOString().split('T')[0];
+    }
 
     if (!acc[key]) acc[key] = { date: key, amount: 0 };
     acc[key].amount += Number(item.amount || 0);
     return acc;
   }, {});
 
-  const data = Object.values(aggregated).slice(-12);
+  // Sort oldest → newest for correct chart ordering
+  const sorted = Object.values(aggregated).sort(
+    (a, b) => new Date(a.date) - new Date(b.date)
+  );
+
+  // For month views keep it compact; for YTD show full year
+  const data = isYtd ? sorted : sorted.slice(-12);
+
+  // X-axis formatter: show Month for YTD, Month/Day for others
+  const formatTick = (dateStr) => {
+    const d = new Date(dateStr);
+    if (Number.isNaN(d.getTime())) return dateStr;
+
+    if (isYtd) {
+      return d.toLocaleDateString('en-US', { month: 'short' });
+    }
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
 
   return (
     <div className="chart-card wide">
@@ -252,18 +279,26 @@ function TimelineChart({ timeline }) {
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis
             dataKey="date"
-            tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            tickFormatter={formatTick}
             stroke="#9ca3af"
             fontSize={12}
           />
           <YAxis tickFormatter={(val) => `$${val}`} stroke="#9ca3af" fontSize={12} />
           <Tooltip formatter={(value) => formatCurrency(value)} />
-          <Area type="monotone" dataKey="amount" stroke="#0d9488" strokeWidth={2} fillOpacity={1} fill="url(#colorAmount)" />
+          <Area
+            type="monotone"
+            dataKey="amount"
+            stroke="#0d9488"
+            strokeWidth={2}
+            fillOpacity={1}
+            fill="url(#colorAmount)"
+          />
         </AreaChart>
       </ResponsiveContainer>
     </div>
   );
 }
+
 
 // Spending Habits Card
 function SpendingHabits({ data }) {
@@ -469,23 +504,22 @@ function GoalTracker({ onCalculate, goalData }) {
             <span>{verdictText}</span>
           </div>
 
-            <div className="goal-metrics">
-        <div className="metric-row">
-            <span className="metric-label">Required monthly savings</span>
-            <span className="metric-value">{formatCurrencyDecimal(requiredMonthly)}</span>
-        </div>
+          <div className="goal-metrics">
+            <div className="metric-row">
+              <span className="metric-label">Required monthly savings</span>
+              <span className="metric-value">{formatCurrencyDecimal(requiredMonthly)}</span>
+            </div>
 
-        <div className="metric-row">
-            <span className="metric-label">Current monthly savings</span>
-            <span className="metric-value">{formatCurrencyDecimal(currentMonthly)}</span>
-        </div>
+            <div className="metric-row">
+              <span className="metric-label">Current monthly savings</span>
+              <span className="metric-value">{formatCurrencyDecimal(currentMonthly)}</span>
+            </div>
 
-        <div className="metric-row gap">
-            <span className="metric-label">Monthly gap</span>
-            <span className="metric-value">{formatCurrencyDecimal(monthlyGap)}</span>
-        </div>
-        </div>
-
+            <div className="metric-row gap">
+              <span className="metric-label">Monthly gap</span>
+              <span className="metric-value">{formatCurrencyDecimal(monthlyGap)}</span>
+            </div>
+          </div>
 
           {Array.isArray(data.recommendations) && data.recommendations.length > 0 && (
             <div className="recommendations">
@@ -546,7 +580,7 @@ function Anomalies({ data }) {
           </div>
         ))}
       </div>
-      
+
     </div>
   );
 }
@@ -563,18 +597,22 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchAllData = async () => {
+  const [mode, setMode] = useState('ytd');
+
+  const fetchAllData = async (nextMode = mode) => {
     setLoading(true);
     setError(null);
 
     try {
+      const q = `?mode=${encodeURIComponent(nextMode)}`;
+
       const [statusRes, summaryRes, timelineRes, spendingRes, subsRes, anomaliesRes] = await Promise.all([
-        api.get('/data/status'),
-        api.get('/summary'),
-        api.get('/timeline'),
-        api.get('/insights/spending'),
-        api.get('/insights/subscriptions'),
-        api.get('/insights/anomalies')
+        api.get(`/data/status${q}`),
+        api.get(`/summary${q}`),
+        api.get(`/timeline${q}`),
+        api.get(`/insights/spending${q}`),
+        api.get(`/insights/subscriptions${q}`),
+        api.get(`/insights/anomalies${q}`)
       ]);
 
       // Normalize success states
@@ -595,19 +633,26 @@ function App() {
   };
 
   useEffect(() => {
-    fetchAllData();
+    fetchAllData(mode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleUploadSuccess = () => fetchAllData();
+  const handleUploadSuccess = () => fetchAllData(mode);
 
   const handleReset = async () => {
     await api.post('/data/reset');
-    fetchAllData();
+    fetchAllData(mode);
   };
 
   const handleGoalCalculate = async (amount, months) => {
-    const result = await api.post('/insights/goal', { goal_amount: amount, goal_months: months });
+    const result = await api.post('/insights/goal', { goal_amount: amount, goal_months: months, mode });
     setGoalData(result);
+  };
+
+  const handleModeChange = (nextMode) => {
+    setMode(nextMode);
+    setGoalData(null);
+    fetchAllData(nextMode);
   };
 
   if (error) {
@@ -616,7 +661,7 @@ function App() {
         <div className="error-screen">
           <h1>⚠️ Connection Error</h1>
           <p>{error}</p>
-          <button onClick={fetchAllData} className="btn-primary">Retry</button>
+          <button onClick={() => fetchAllData(mode)} className="btn-primary">Retry</button>
         </div>
       </div>
     );
@@ -630,7 +675,36 @@ function App() {
         <div className="header-content">
           <h1>🚀 Smart Financial Coach</h1>
           <p>AI-powered insights to transform your spending habits</p>
+
+          {/* Time Range Selector */}
+          <div className="mode-toggle" style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button
+              className={`btn-small ${mode === 'this_month' ? 'active' : ''}`}
+              onClick={() => handleModeChange('this_month')}
+              disabled={loading}
+              type="button"
+            >
+              This Month
+            </button>
+            <button
+              className={`btn-small ${mode === 'last_month' ? 'active' : ''}`}
+              onClick={() => handleModeChange('last_month')}
+              disabled={loading}
+              type="button"
+            >
+              Last Month
+            </button>
+            <button
+              className={`btn-small ${mode === 'ytd' ? 'active' : ''}`}
+              onClick={() => handleModeChange('ytd')}
+              disabled={loading}
+              type="button"
+            >
+              Year to Date
+            </button>
+          </div>
         </div>
+
         <FileUpload onUploadSuccess={handleUploadSuccess} dataStatus={dataStatus} />
       </header>
 
@@ -645,7 +719,8 @@ function App() {
 
           <div className="charts-row">
             <CategoryChart categories={summary?.categories} />
-            <TimelineChart timeline={timeline?.data} />
+            <TimelineChart timeline={timeline?.data} mode={mode} />
+
           </div>
 
           <div className="insights-grid">
