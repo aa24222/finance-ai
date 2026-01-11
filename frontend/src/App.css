@@ -2,14 +2,14 @@
 /* ========== CSS Variables ========== */
 :root {
   /* Backgrounds */
-  --bg-primary: #2b2c77;   /* page background */
-  --bg-card: #1d1c52;      /* cards */
-  --bg-hover: #0f1736;     /* hover surfaces */
+  --bg-primary: #2b2c77;   
+  --bg-card: #292147;      
+  --bg-hover: #0f1736;     
 
   /* Text */
-  --text-primary: #eef2ff;     /* near-white */
-  --text-secondary: #b7c3e1;   /* muted */
-  --text-muted: #7f8bb1;       /* softer */
+  --text-primary: #eef2ff;     
+  --text-secondary: #b7c3e1;   
+  --text-muted: #7f8bb1;      
 
   /* Borders */
   --border: rgba(255, 255, 255, 0.08);
@@ -23,15 +23,15 @@
   --success-light: rgba(34, 197, 94, 0.16);
   --warning: #f59e0b;
   --warning-light: rgba(245, 158, 11, 0.16);
-  --danger: #fb7185;          /* pink-red fits neon dark UIs */
+  --danger: #fb7185;          
   --danger-light: rgba(251, 113, 133, 0.14);
 
-  /* Shadows (glowy + premium, still subtle) */
+  /* Shadows */
   --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.35);
   --shadow-md: 0 18px 50px rgba(0, 0, 0, 0.45);
   --shadow-lg: 0 28px 80px rgba(0, 0, 0, 0.55);
 
-  /* Radius + font (unchanged) */
+  /* Radius + font  */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -101,8 +101,9 @@ body {
 }
 
 .header-content h1 {
-  font-size: 28px;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-weight: 700;
+  font-size: 28px;
   color: var(--text-primary);
   margin-bottom: 4px;
 }
@@ -401,7 +402,7 @@ body {
 }
 
 .savings-callout {
-  background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+  background: linear-gradient(135deg, var(--success) 0%, #0c7036 100%);
   color: white;
   padding: 16px;
   border-radius: var(--radius-sm);
