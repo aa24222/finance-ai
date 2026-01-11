@@ -74,7 +74,7 @@ export default function Login() {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <h1>🚀 Smart Financial Coach</h1>
+          <h1>Trust Spend</h1>
           <p>AI-powered insights to transform your spending habits</p>
         </div>
 

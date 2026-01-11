@@ -738,7 +738,7 @@ export default function Dashboard() {
         <div className="header-content">
           {/* AUTH: Header with user info and sign out */}
           <div className="header-top">
-            <h1>🚀 Smart Financial Coach</h1>
+            <h1>Trust Spend</h1>
             <div className="user-menu">
               <span className="user-email">{user?.email}</span>
               <button onClick={handleSignOut} className="btn-small btn-outline">Sign Out</button>
