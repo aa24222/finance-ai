@@ -1,9 +1,12 @@
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from analysis_engine import FinancialAnalyzer
 from auth_middleware import require_auth, get_user_data_path, get_user_csv_path
 from werkzeug.utils import secure_filename
-import os
 import traceback
 
 app = Flask(__name__)
