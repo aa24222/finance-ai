@@ -1,0 +1,58 @@
+transaction_id,date,description,amount,type,category,merchant,transaction_tag
+TXN001000,7/15/2024,Netflix Subscription,-15.99,debit,Entertainment,Netflix,subscription
+TXN001001,7/15/2024,Starbucks - Coffee,-6.98,debit,Food & Drink,Starbucks,normal
+TXN001002,7/15/2024,Safeway,-50.78,debit,Groceries,Safeway,normal
+TXN001003,7/16/2024,Starbucks - Coffee,-5.69,debit,Food & Drink,Starbucks,normal
+TXN001004,7/16/2024,Walmart,-25.93,debit,Groceries,Walmart,normal
+TXN001005,7/16/2024,Five Guys,-15.61,debit,Dining Out,Five Guys,normal
+TXN001006,7/17/2024,Starbucks - Coffee,-7.02,debit,Food & Drink,Starbucks,normal
+TXN001007,7/17/2024,Target,-36.91,debit,Groceries,Target,normal
+TXN001008,7/17/2024,Shake Shack,-12.69,debit,Dining Out,Shake Shack,normal
+TXN001009,7/17/2024,Shell,-52.18,debit,Transportation,Shell,normal
+TXN001010,7/18/2024,Headspace Premium,-12.99,debit,Health,Headspace,subscription
+TXN001011,7/18/2024,Starbucks - Coffee,-6.96,debit,Food & Drink,Starbucks,normal
+TXN001013,7/20/2024,Safeway,-134.11,debit,Groceries,Safeway,normal
+TXN001012,7/20/2024,Amazon Prime Membership,-14.99,debit,Shopping,Amazon Prime Video,subscription
+TXN001014,7/21/2024,Trader Joes,-94.67,debit,Groceries,Trader Joes,normal
+TXN001015,7/21/2024,Thai Kitchen,-37.18,debit,Dining Out,Thai Kitchen,normal
+TXN001016,7/21/2024,Sushi Palace,-41.54,debit,Dining Out,Sushi Palace,normal
+TXN001017,7/22/2024,Starbucks - Coffee,-5.96,debit,Food & Drink,Starbucks,normal
+TXN001018,7/22/2024,Trader Joes,-39.04,debit,Groceries,Trader Joes,normal
+TXN001019,7/22/2024,Pizza Hut,-17.01,debit,Dining Out,Pizza Hut,normal
+TXN001020,7/23/2024,Local Cafe - Coffee,-5.79,debit,Food & Drink,Local Cafe,normal
+TXN001021,7/23/2024,Walmart,-43.86,debit,Groceries,Walmart,normal
+TXN001025,7/24/2024,IKEA,-131.3,debit,Shopping,IKEA,normal
+TXN001022,7/24/2024,Blue Bottle Coffee - Coffee,-6.52,debit,Food & Drink,Blue Bottle Coffee,normal
+TXN001023,7/24/2024,Whole Foods,-55.14,debit,Groceries,Whole Foods,normal
+TXN001024,7/24/2024,Subway,-16.34,debit,Dining Out,Subway,normal
+TXN001027,7/25/2024,Panera Bread,-10.92,debit,Dining Out,Panera Bread,normal
+TXN001026,7/25/2024,Peets Coffee - Coffee,-7.44,debit,Food & Drink,Peets Coffee,normal
+TXN001028,7/26/2024,Trader Joes,-40.22,debit,Groceries,Trader Joes,normal
+TXN001029,7/27/2024,Walmart,-133.34,debit,Groceries,Walmart,normal
+TXN001030,7/27/2024,Thai Kitchen,-42.41,debit,Dining Out,Thai Kitchen,normal
+TXN001031,7/27/2024,Sushi Palace,-41.11,debit,Dining Out,Sushi Palace,normal
+TXN001032,7/28/2024,Trader Joes,-114.2,debit,Groceries,Trader Joes,normal
+TXN001033,7/28/2024,Five Guys,-42.57,debit,Dining Out,Five Guys,normal
+TXN001034,7/28/2024,Uber Ride,-16.71,debit,Transportation,Uber,normal
+TXN001035,7/28/2024,Amazon Prime Video,-19.49,debit,Entertainment,Amazon Prime Video,subscription
+TXN001036,7/29/2024,Dunkin - Coffee,-5.83,debit,Food & Drink,Dunkin,normal
+TXN001037,7/31/2024,Dunkin - Coffee,-6.4,debit,Food & Drink,Dunkin,normal
+TXN001038,7/31/2024,Whole Foods,-36.83,debit,Groceries,Whole Foods,normal
+TXN001039,7/31/2024,Chevron,-45.14,debit,Transportation,Chevron,normal
+TXN001040,8/1/2024,ACME Corp - Salary Deposit,4500,credit,Income,ACME Corp,normal
+TXN001041,8/1/2024,Rent Payment - Oak Street Apartments,-1650,debit,Housing,Oak Street Apartments,bill
+TXN001043,8/1/2024,Wendys,-12.23,debit,Dining Out,Wendys,normal
+TXN001042,8/1/2024,Starbucks - Coffee,-7.31,debit,Food & Drink,Starbucks,normal
+TXN001044,8/2/2024,Dunkin - Coffee,-6.65,debit,Food & Drink,Dunkin,normal
+TXN001045,8/2/2024,Target,-53.26,debit,Groceries,Target,normal
+TXN001046,8/2/2024,Taco Bell,-15.27,debit,Dining Out,Taco Bell,normal
+TXN001047,8/3/2024,Planet Fitness Monthly,-24.99,debit,Fitness,Planet Fitness,subscription
+TXN001052,8/5/2024,PG&E Electric,-74.99,debit,Utilities,PG&E Electric,bill
+TXN001056,8/7/2024,Comcast Internet,-79.99,debit,Utilities,Comcast Internet,bill
+TXN001063,8/10/2024,AT&T Phone,-65,debit,Utilities,AT&T Phone,bill
+TXN001069,8/12/2024,Spotify Premium,-10.99,debit,Entertainment,Spotify,subscription
+TXN001074,8/15/2024,Netflix Subscription,-15.99,debit,Entertainment,Netflix,subscription
+TXN001082,8/18/2024,Headspace Premium,-12.99,debit,Health,Headspace,subscription
+TXN001088,8/20/2024,Amazon Prime Membership,-14.99,debit,Shopping,Amazon Prime Video,subscription
+TXN001110,9/1/2024,ACME Corp - Salary Deposit,4500,credit,Income,ACME Corp,normal
+TXN001111,9/1/2024,Rent Payment - Oak Street Apartments,-1650,debit,Housing,Oak Street Apartments,bill
