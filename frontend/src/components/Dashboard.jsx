@@ -3,7 +3,7 @@ import { PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tool
 import { useAuth } from '../context/AuthContext';
 import '../App.css';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
 
 // ========== Format Helpers ==========
 const formatCurrency = (amount) =>
