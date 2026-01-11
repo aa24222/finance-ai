@@ -1,463 +1,560 @@
 import pandas as pd
 import numpy as np
-from datetime import datetime
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import IsolationForest
 from sklearn.linear_model import LinearRegression
+
 
 class FinancialAnalyzer:
     """
     Smart Financial Coach - Analysis Engine
     Provides AI-powered insights into spending patterns
     """
-    
+
     def __init__(self, csv_path):
+        # Load CSV
         self.df = pd.read_csv(csv_path)
-        self.df['date'] = pd.to_datetime(self.df['date'])
-        
+
+        # Normalize core columns
+        self.df['date'] = pd.to_datetime(self.df.get('date'), errors='coerce')
+        self.df['amount'] = pd.to_numeric(self.df.get('amount'), errors='coerce')
+
+        # Default tag if missing (normal/subscription/bill)
+        if 'transaction_tag' not in self.df.columns:
+            self.df['transaction_tag'] = 'normal'
+        self.df['transaction_tag'] = (
+            self.df['transaction_tag']
+            .fillna('normal')
+            .astype(str)
+            .str.strip()
+            .str.lower()
+        )
+
+        # Normalize type/category/merchant/description if present
+        if 'type' in self.df.columns:
+            self.df['type'] = self.df['type'].astype(str).str.strip().str.lower()
+        if 'category' in self.df.columns:
+            self.df['category'] = self.df['category'].astype(str).str.strip()
+        if 'merchant' in self.df.columns:
+            self.df['merchant'] = self.df['merchant'].astype(str).str.strip()
+        if 'description' in self.df.columns:
+            self.df['description'] = self.df['description'].astype(str).str.strip()
+
+        # Drop unusable rows + keep deterministic ordering
+        self.df = self.df.dropna(subset=['date', 'amount'])
+        self.df = self.df.sort_values('date').reset_index(drop=True)
+
     def get_summary_stats(self):
         """Get overall financial summary"""
-        total_income = self.df[self.df['type'] == 'credit']['amount'].sum()
-        total_spending = abs(self.df[self.df['type'] == 'debit']['amount'].sum())
-        
-        days = (self.df['date'].max() - self.df['date'].min()).days
-        months = max(1, days / 30.0)
-        
-        return {
-            'total_income': float(total_income),
-            'total_spending': float(total_spending),
-            'net_balance': float(total_income - total_spending),
-            'avg_monthly_spending': float(total_spending / months),
-            'avg_daily_spending': float(total_spending / max(1, days)),
-            'date_range': {
-                'start': str(self.df['date'].min().date()),
-                'end': str(self.df['date'].max().date()),
-                'days': int(days)
+        df = self.df
+        if df.empty:
+            return {
+                'total_income': 0.0,
+                'total_spending': 0.0,
+                'net_balance': 0.0,
+                'avg_monthly_spending': 0.0,
+                'avg_daily_spending': 0.0,
+                'date_range': {'start': None, 'end': None, 'days': 0},
             }
+
+        # Separate credits/debits
+        income = float(df.loc[df['type'] == 'credit', 'amount'].sum())
+        spending = float(df.loc[df['type'] == 'debit', 'amount'].abs().sum())
+
+        # Time window math
+        days = int((df['date'].max() - df['date'].min()).days)
+        months = max(1.0, days / 30.0)
+
+        return {
+            'total_income': income,
+            'total_spending': spending,
+            'net_balance': float(income - spending),
+            'avg_monthly_spending': float(spending / months),
+            'avg_daily_spending': float(spending / max(1, days)),
+            'date_range': {
+                'start': str(df['date'].min().date()),
+                'end': str(df['date'].max().date()),
+                'days': int(days),
+            },
         }
-    
+
     def get_spending_by_category(self):
         """Get spending breakdown by category"""
-        spending = self.df[self.df['type'] == 'debit'].groupby('category')['amount'].sum().abs()
-        total = spending.sum()
-        
-        result = []
+        df = self.df
+        debit = df[df['type'] == 'debit']
+        if debit.empty:
+            return []
+
+        # Sum by category
+        spending = debit.groupby('category')['amount'].sum().abs()
+        total = float(spending.sum()) or 0.0
+
+        out = []
         for category, amount in spending.sort_values(ascending=False).items():
-            result.append({
+            amt = float(amount)
+            out.append({
                 'category': category,
-                'amount': float(amount),
-                'percentage': float(amount / total * 100) if total > 0 else 0
+                'amount': amt,
+                'percentage': float((amt / total) * 100) if total > 0 else 0.0,
             })
-        
-        return result
-    
+        return out
+
     # ========== FEATURE 1: Spending Habits Detection ==========
     def detect_spending_habits(self):
         """
         Finds frequent small-transaction habits using data-driven analysis
         Detects patterns like coffee shops, fast food, convenience stores, etc.
         """
-        # Filter small transactions ($3-$25 range - typical habit spending)
-        small_tx = self.df[(self.df['type'] == 'debit') & 
-                           (self.df['amount'].abs() >= 3) & 
-                           (self.df['amount'].abs() <= 25)]
-        
-        if len(small_tx) == 0:
+        df = self.df
+
+        # Focus on "habit-sized" debits and ignore bills/subscriptions
+        small = df[
+            (df['type'] == 'debit') &
+            (df['amount'].abs().between(3, 25)) &
+            (~df['transaction_tag'].isin(['bill', 'subscription']))
+        ]
+        if small.empty:
             return None
-        
-        # Group by merchant to find patterns
-        merchant_stats = small_tx.groupby('merchant').agg({
-            'amount': ['count', 'mean', 'sum']
-        }).reset_index()
-        
-        merchant_stats.columns = ['merchant', 'visits', 'avg_amount', 'total']
-        merchant_stats['total'] = merchant_stats['total'].abs()
-        
-        # Only consider merchants with 3+ visits (habitual behavior)
-        frequent = merchant_stats[merchant_stats['visits'] >= 3]
-        
-        if len(frequent) == 0:
+
+        # Merchant rollup
+        stats = small.groupby('merchant').agg(
+            visits=('amount', 'count'),
+            avg_amount=('amount', 'mean'),
+            total=('amount', 'sum'),
+        ).reset_index()
+        stats['total'] = stats['total'].abs()
+
+        # Needs repetition to count as a habit
+        stats = stats[stats['visits'] >= 3]
+        if stats.empty:
             return None
-        
-        # Find the top spending habit (most visits + highest total)
-        # Sort by visits first, then by total spent
-        top_habit = frequent.sort_values(['visits', 'total'], ascending=False).iloc[0]
-        
-        # Calculate time-based metrics
-        days = (self.df['date'].max() - self.df['date'].min()).days
-        months = max(1, days / 30.0)
-        weeks = max(1, days / 7.0)
-        
-        monthly_avg = top_habit['total'] / months
-        weekly_frequency = top_habit['visits'] / weeks
-        annual_projection = monthly_avg * 12
-        
-        # Estimate potential savings (50% reduction is reasonable)
-        potential_savings = annual_projection * 0.5
-        
+
+        # Pick the strongest habit signal
+        top = stats.sort_values(['visits', 'total'], ascending=False).iloc[0]
+
+        days = int((df['date'].max() - df['date'].min()).days) if not df.empty else 0
+        months = max(1.0, days / 30.0)
+        weeks = max(1.0, days / 7.0)
+
+        monthly_avg = float(top['total'] / months)
+        weekly_frequency = float(top['visits'] / weeks)
+        annual_projection = float(monthly_avg * 12)
+        potential_savings = float(annual_projection * 0.5)
+
         return {
-            'habit_type': top_habit['merchant'],
-            'total_spent': float(top_habit['total']),
-            'num_visits': int(top_habit['visits']),
-            'avg_per_visit': float(top_habit['avg_amount']),
-            'monthly_average': float(monthly_avg),
-            'weekly_frequency': float(weekly_frequency),
-            'annual_projection': float(annual_projection),
-            'potential_savings': float(potential_savings),
-            'insight': f"You spent ${top_habit['total']:.2f} at {top_habit['merchant']} " +
-                      f"({int(top_habit['visits'])} visits at ${top_habit['avg_amount']:.2f} per visit). " +
-                      f"Cutting back 50% could save ${potential_savings:.0f}/year!"
+            'habit_type': top['merchant'],
+            'total_spent': float(top['total']),
+            'num_visits': int(top['visits']),
+            'avg_per_visit': float(top['avg_amount']),
+            'monthly_average': monthly_avg,
+            'weekly_frequency': weekly_frequency,
+            'annual_projection': annual_projection,
+            'potential_savings': potential_savings,
+            'insight': (
+                f"You spent ${top['total']:.2f} at {top['merchant']} "
+                f"({int(top['visits'])} visits at ${top['avg_amount']:.2f} per visit). "
+                f"Cutting back 50% could save ${potential_savings:.0f}/year!"
+            ),
         }
-    
+
     # ========== AI FEATURE: Anomaly Detection ==========
     def detect_anomalies(self, contamination=0.05):
         """
         Uses Isolation Forest (AI) to detect unusual transactions
         Identifies fraud, errors, or unexpected charges automatically
         """
-        # Get debit transactions only
-        transactions = self.df[self.df['type'] == 'debit'].copy()
-        
-        if len(transactions) < 10:
+        df = self.df
+        tx = df[(df['type'] == 'debit') & df['amount'].notna()].copy()
+        if tx.shape[0] < 10:
             return None
-        
-        # Calculate additional features for better anomaly detection
-        transactions['day_of_week'] = transactions['date'].dt.dayofweek
-        transactions['day_of_month'] = transactions['date'].dt.day
-        transactions['hour'] = transactions['date'].dt.hour if 'time' in transactions.columns else 12
-        
-        # Calculate historical patterns for each merchant
-        merchant_stats = transactions.groupby('merchant')['amount'].agg(['mean', 'std']).reset_index()
-        merchant_stats.columns = ['merchant', 'merchant_avg', 'merchant_std']
-        transactions = transactions.merge(merchant_stats, on='merchant', how='left')
-        
-        # Calculate z-score (how unusual compared to that merchant)
-        transactions['z_score'] = np.abs((transactions['amount'].abs() - transactions['merchant_avg']) / 
-                                         (transactions['merchant_std'] + 1e-5))
-        
-        # Prepare features for Isolation Forest
-        feature_columns = ['amount', 'day_of_week', 'day_of_month', 'z_score']
-        
-        # Create feature matrix (convert amounts to absolute values)
-        features = transactions[feature_columns].copy()
-        features['amount'] = features['amount'].abs()
-        
-        # Fill NaN values
-        features = features.fillna(features.mean())
-        
-        # Train Isolation Forest model
-        iso_forest = IsolationForest(
-            contamination=contamination,  # Expected % of anomalies
-            random_state=42,
-            n_estimators=100
+
+        # Work in absolute space for modeling
+        tx['amount_abs'] = tx['amount'].abs()
+
+        # Exclude bills/subscriptions from anomaly modeling
+        model_tx = tx[~tx['transaction_tag'].isin(['bill', 'subscription'])].copy()
+        if model_tx.shape[0] < 10:
+            return {
+                'found': False,
+                'message': 'Not enough non-recurring data for anomaly detection',
+                'ml_model': 'Isolation Forest',
+                'recurring_bills': self._get_tagged_bills(tx),
+            }
+
+        # Feature engineering
+        model_tx = model_tx.sort_values('date').reset_index(drop=True)
+        model_tx['day_of_week'] = model_tx['date'].dt.dayofweek
+        model_tx['day_of_month'] = model_tx['date'].dt.day
+
+        # Merchant history (shifted to avoid leakage)
+        model_tx['merchant_avg'] = (
+            model_tx.groupby('merchant')['amount_abs']
+            .expanding().mean().shift(1)
+            .reset_index(level=0, drop=True)
         )
-        
-        # Predict anomalies (-1 = anomaly, 1 = normal)
-        transactions['anomaly'] = iso_forest.fit_predict(features)
-        transactions['anomaly_score'] = iso_forest.score_samples(features)
-        
-        # Get anomalies
-        anomalies = transactions[transactions['anomaly'] == -1].copy()
-        
-        if len(anomalies) == 0:
+        model_tx['merchant_std'] = (
+            model_tx.groupby('merchant')['amount_abs']
+            .expanding().std().shift(1)
+            .reset_index(level=0, drop=True)
+        )
+        model_tx['z_score'] = (
+            (model_tx['amount_abs'] - model_tx['merchant_avg']) /
+            (model_tx['merchant_std'] + 1e-5)
+        ).abs()
+
+        # Model matrix
+        X = model_tx[['amount_abs', 'day_of_week', 'day_of_month', 'z_score']].copy()
+        X['log_amount'] = np.log1p(X['amount_abs'])
+        X = X.drop(columns=['amount_abs'])
+        X = X.fillna(X.mean(numeric_only=True))
+
+        # Train model
+        iso = IsolationForest(
+            contamination=float(contamination),
+            random_state=42,
+            n_estimators=200,
+        )
+        model_tx['anomaly'] = iso.fit_predict(X)
+        model_tx['anomaly_score'] = iso.score_samples(X)
+
+        anomalies = model_tx[model_tx['anomaly'] == -1].copy()
+        recurring_bills = self._get_tagged_bills(tx)
+
+        if anomalies.empty:
             return {
                 'found': False,
                 'message': 'No unusual transactions detected - all spending appears normal',
-                'ml_model': 'Isolation Forest'
+                'ml_model': 'Isolation Forest',
+                'recurring_bills': recurring_bills,
             }
-        
-        # Sort by anomaly score (most unusual first)
+
+        # Rank most unusual first (lower score = more anomalous)
         anomalies = anomalies.sort_values('anomaly_score')
-        
-        # Analyze anomalies
+
+        # Global thresholds for explanations
+        median_amount = float(model_tx['amount_abs'].median())
+        q85 = float(model_tx['amount_abs'].quantile(0.85))
+        q95 = float(model_tx['amount_abs'].quantile(0.95))
+
+        s1 = float(np.quantile(anomalies['anomaly_score'], 0.33))
+        s2 = float(np.quantile(anomalies['anomaly_score'], 0.66))
+
+        # Build response list
         anomaly_list = []
-        for idx, row in anomalies.head(10).iterrows():  # Top 10 anomalies
-            # Determine why it's unusual
+        for _, row in anomalies.head(10).iterrows():
             reasons = []
-            
-            amount_abs = abs(row['amount'])
-            
-            # Check if amount is unusual
-            if amount_abs > transactions['amount'].abs().quantile(0.9):
-                pct = ((amount_abs - transactions['amount'].abs().median()) / 
-                       transactions['amount'].abs().median() * 100)
+            amount = float(row['amount_abs'])
+            score = float(row['anomaly_score'])
+
+            # Compare against global typical spend
+            if amount > q85:
+                pct = ((amount - median_amount) / median_amount * 100) if median_amount > 0 else 0
                 reasons.append(f"{pct:.0f}% above typical spending")
-            
-            # Check if unusual for this merchant
-            if pd.notna(row['merchant_avg']) and amount_abs > row['merchant_avg'] * 2:
-                pct = ((amount_abs - row['merchant_avg']) / row['merchant_avg'] * 100)
+
+            # Compare against this merchant's historical baseline
+            if pd.notna(row['merchant_avg']) and float(row['merchant_avg']) > 0 and amount > float(row['merchant_avg']) * 2:
+                pct = ((amount - float(row['merchant_avg'])) / float(row['merchant_avg']) * 100)
                 reasons.append(f"{pct:.0f}% above normal for {row['merchant']}")
-            
-            # Check if unusual timing
-            if row['day_of_week'] in [5, 6]:  # Weekend
-                weekend_avg = transactions[transactions['day_of_week'].isin([5,6])]['amount'].abs().mean()
-                if amount_abs > weekend_avg * 1.5:
-                    reasons.append("unusual weekend purchase")
-            
-            # Check category
-            category_avg = transactions[transactions['category'] == row['category']]['amount'].abs().mean()
-            if amount_abs > category_avg * 2:
-                reasons.append(f"high amount for {row['category']} category")
-            
+
+            # Compare against category baseline (if enough samples)
+            cat_tx = model_tx[model_tx['category'] == row['category']]
+            if len(cat_tx) >= 5:
+                cat_avg = float(cat_tx['amount_abs'].mean())
+                if cat_avg > 0 and amount > cat_avg * 2:
+                    reasons.append(f"high amount for {row['category']} category")
+
             if not reasons:
                 reasons.append("unusual pattern detected by AI")
-            
+
+            # Score-to-confidence mapping
+            if score <= s1:
+                confidence = 'high'
+            elif score <= s2:
+                confidence = 'medium'
+            else:
+                confidence = 'low'
+
             anomaly_list.append({
-                'date': str(row['date'].date()) if hasattr(row['date'], 'date') else str(row['date']),
+                'date': row['date'].date().isoformat(),
                 'merchant': row['merchant'],
-                'amount': float(amount_abs),
+                'amount': amount,
                 'category': row['category'],
-                'description': row['description'],
-                'anomaly_score': float(row['anomaly_score']),
+                'description': row.get('description', ''),
+                'anomaly_score': score,
+                'confidence': confidence,
                 'reasons': reasons,
-                'severity': 'high' if amount_abs > transactions['amount'].abs().quantile(0.95) else 
-                           'medium' if amount_abs > transactions['amount'].abs().quantile(0.85) else 'low'
+                'severity': 'high' if amount > q95 else 'medium' if amount > q85 else 'low',
             })
-        
-        # Calculate statistics
-        total_anomaly_amount = anomalies['amount'].abs().sum()
-        avg_anomaly = anomalies['amount'].abs().mean()
-        pct_of_transactions = (len(anomalies) / len(transactions)) * 100
-        
-        # Generate insight
-        high_severity = [a for a in anomaly_list if a['severity'] == 'high']
-        
-        if len(high_severity) > 0:
-            top_anomaly = high_severity[0]
-            insight = f"AI detected {len(anomalies)} unusual transactions ({pct_of_transactions:.1f}% of all spending). " + \
-                     f"Most significant: ${top_anomaly['amount']:.2f} at {top_anomaly['merchant']} " + \
-                     f"({', '.join(top_anomaly['reasons'][:2])})."
-        else:
-            insight = f"AI identified {len(anomalies)} minor spending anomalies totaling ${total_anomaly_amount:.2f}. " + \
-                     f"These transactions show unusual patterns compared to your typical behavior."
-        
+
+        # Summary stats
+        total_anomaly_amount = float(anomalies['amount_abs'].sum(skipna=True))
+        pct_of_transactions = float((len(anomalies) / max(1, len(model_tx))) * 100)
+
+        insight = (
+            f"AI detected {len(anomalies)} unusual transactions "
+            f"({pct_of_transactions:.1f}% of all non-recurring spending). "
+            f"Largest anomaly: ${anomaly_list[0]['amount']:.2f} "
+            f"at {anomaly_list[0]['merchant']}."
+        )
+
         return {
             'found': True,
             'anomalies': anomaly_list,
-            'total_anomalies': len(anomalies),
+            'total_anomalies': int(len(anomalies)),
             'total_amount': float(total_anomaly_amount),
-            'avg_anomaly_amount': float(avg_anomaly),
             'percentage_of_transactions': float(pct_of_transactions),
             'insight': insight,
             'ml_model': 'Isolation Forest (unsupervised anomaly detection)',
-            'contamination_rate': contamination
+            'contamination_rate': float(contamination),
+            'recurring_bills': recurring_bills,
         }
-    
+
+    def _get_tagged_bills(self, debit_df):
+        # Summarize recurring bills using the CSV tag
+        bills = debit_df[debit_df['transaction_tag'] == 'bill'].copy()
+        if bills.empty:
+            return []
+
+        bills['month'] = bills['date'].dt.to_period('M')
+        bills['amount_rounded'] = bills['amount'].abs().round(2)
+
+        grouped = bills.groupby(['merchant', 'amount_rounded']).agg(
+            months_count=('month', 'nunique'),
+            occurrences=('amount', 'count'),
+        ).reset_index()
+
+        out = []
+        for _, r in grouped.sort_values('months_count', ascending=False).head(10).iterrows():
+            out.append({
+                'merchant': r['merchant'],
+                'amount': float(r['amount_rounded']),
+                'months_count': int(r['months_count']),
+                'occurrences': int(r['occurrences']),
+            })
+        return out
+
     # ========== FEATURE 2: Subscription Detector ==========
     def detect_subscriptions(self):
         """
-        Finds recurring charges that might be subscriptions
+        Uses transaction labels to identify subscriptions.
         """
-        # Group by merchant and amount to find recurring patterns
-        debit_transactions = self.df[self.df['type'] == 'debit'].copy()
-        
-        # Round amounts to handle minor variations
-        debit_transactions['amount_rounded'] = debit_transactions['amount'].round(2)
-        
-        recurring = debit_transactions.groupby(['merchant', 'amount_rounded']).agg({
-            'date': 'count',
-            'amount': 'first'
-        }).reset_index()
-        recurring.columns = ['merchant', 'amount_rounded', 'count', 'amount']
-        
-        # Subscriptions typically appear 3+ times
-        subscriptions = recurring[recurring['count'] >= 3].sort_values('count', ascending=False)
-        
-        results = []
-        total_monthly_cost = 0
-        unused_waste = 0
-        
-        # Keywords that suggest unused subscriptions
-        unused_keywords = ['fitness', 'gym', 'hulu', 'headspace', 'meditation', 'premium']
-        
-        for _, row in subscriptions.iterrows():
-            monthly_cost = abs(row['amount'])
-            annual_cost = monthly_cost * 12
-            
-            # Heuristic: Check if likely unused
-            is_unused = any(keyword in row['merchant'].lower() for keyword in unused_keywords)
-            
-            sub_info = {
-                'merchant': row['merchant'],
-                'monthly_cost': float(monthly_cost),
-                'annual_cost': float(annual_cost),
-                'occurrences': int(row['count']),
-                'likely_unused': is_unused,
-                'tag': 'UNUSED' if is_unused else 'Active'
+        df = self.df
+        debit = df[df['type'] == 'debit'].copy()
+        if debit.empty:
+            return {
+                'subscriptions': [],
+                'total_count': 0,
+                'total_monthly_cost': 0.0,
+                'total_annual_cost': 0.0,
+                'unused_count': 0,
+                'unused_monthly_waste': 0.0,
+                'unused_annual_waste': 0.0,
+                'insight': 'No subscriptions detected.',
             }
-            
-            results.append(sub_info)
-            total_monthly_cost += monthly_cost
-            
-            if is_unused:
-                unused_waste += monthly_cost
-        
+
+        subs = debit[debit['transaction_tag'] == 'subscription'].copy()
+        if subs.empty:
+            return {
+                'subscriptions': [],
+                'total_count': 0,
+                'total_monthly_cost': 0.0,
+                'total_annual_cost': 0.0,
+                'unused_count': 0,
+                'unused_monthly_waste': 0.0,
+                'unused_annual_waste': 0.0,
+                'insight': 'No subscriptions detected.',
+            }
+
+        subs['amount_abs'] = subs['amount'].abs()
+        max_date = subs['date'].max()
+
+        results = []
+        total_monthly = 0.0
+        unused_monthly = 0.0
+
+        for merchant, g in subs.groupby('merchant'):
+            # Use median to tolerate small price changes
+            g = g.sort_values('date')
+            monthly_cost = float(np.median(g['amount_abs']))
+            annual_cost = float(monthly_cost * 12)
+
+            # Recentness heuristic (stale subscriptions look "unused")
+            last_charge = g['date'].max()
+            days_since = int((max_date - last_charge).days)
+
+            # Trial → paid signal (multiple distinct price points)
+            amounts = g['amount_abs'].round(2)
+            uniq = sorted(amounts.unique().tolist())
+            trial_to_paid = False
+            if len(uniq) >= 2:
+                lo, hi = float(uniq[0]), float(uniq[-1])
+                if lo == 0.0 or (hi > 0 and lo / hi <= 0.5):
+                    trial_to_paid = True
+
+            # Minimal "cancel suggestion" logic (demo-friendly)
+            likely_unused = (days_since >= 45) or (len(g) <= 1)
+
+            results.append({
+                'merchant': merchant,
+                'monthly_cost': monthly_cost,
+                'annual_cost': annual_cost,
+                'occurrences': int(len(g)),
+                'last_charge_date': last_charge.date().isoformat(),
+                'trial_to_paid': bool(trial_to_paid),
+                'likely_unused': bool(likely_unused),
+                'tag': 'SUBSCRIPTION',
+            })
+
+            total_monthly += monthly_cost
+            if likely_unused:
+                unused_monthly += monthly_cost
+
+        # Sort by monthly impact
+        results.sort(key=lambda r: -r['monthly_cost'])
+
+        unused_count = sum(1 for r in results if r['likely_unused'])
+        trial_count = sum(1 for r in results if r.get('trial_to_paid'))
+
+        extra = []
+        if trial_count:
+            extra.append(f"{trial_count} look like trial→paid conversions")
+        if unused_count:
+            extra.append(f"{unused_count} may be worth reviewing")
+        extra_text = (" (" + "; ".join(extra) + ")") if extra else ""
+
         return {
             'subscriptions': results,
-            'total_count': len(results),
-            'total_monthly_cost': float(total_monthly_cost),
-            'total_annual_cost': float(total_monthly_cost * 12),
-            'unused_count': sum(1 for s in results if s['likely_unused']),
-            'unused_monthly_waste': float(unused_waste),
-            'unused_annual_waste': float(unused_waste * 12),
-            'insight': f"Found {len(results)} recurring subscriptions totaling ${total_monthly_cost:.2f}/month. " +
-                      f"${unused_waste:.2f}/month ({len([s for s in results if s['likely_unused']])} subscriptions) " +
-                      f"appear to be unused - that's ${unused_waste * 12:.0f}/year!"
+            'total_count': int(len(results)),
+            'total_monthly_cost': float(total_monthly),
+            'total_annual_cost': float(total_monthly * 12.0),
+            'unused_count': int(unused_count),
+            'unused_monthly_waste': float(unused_monthly),
+            'unused_annual_waste': float(unused_monthly * 12.0),
+            'insight': f"Found {len(results)} subscriptions totaling ${total_monthly:.2f}/month{extra_text}.",
         }
-    
+
     # ========== FEATURE 3: Goal Forecasting ==========
     def forecast_goal(self, goal_amount, goal_months):
         """
         Uses Linear Regression ML to forecast whether user will reach savings goal
         Provides AI-powered predictions based on spending trends
         """
-        # Prepare monthly spending data for ML model
-        df_debit = self.df[self.df['type'] == 'debit'].copy()
-        df_debit['month'] = df_debit['date'].dt.to_period('M')
-        
-        # Calculate monthly spending totals
-        monthly_spending = df_debit.groupby('month')['amount'].sum().abs().reset_index()
+        df = self.df
+        if df.empty:
+            return self._forecast_goal_simple(goal_amount, goal_months)
+
+        # Monthly spending
+        debit = df[df['type'] == 'debit'].copy()
+        debit['month'] = debit['date'].dt.to_period('M')
+        monthly_spending = debit.groupby('month')['amount'].sum().abs().reset_index()
         monthly_spending.columns = ['month', 'spending']
         monthly_spending['month_num'] = range(len(monthly_spending))
-        
-        # Calculate monthly income
-        df_credit = self.df[self.df['type'] == 'credit'].copy()
-        df_credit['month'] = df_credit['date'].dt.to_period('M')
-        monthly_income = df_credit.groupby('month')['amount'].sum().reset_index()
+
+        # Monthly income
+        credit = df[df['type'] == 'credit'].copy()
+        credit['month'] = credit['date'].dt.to_period('M')
+        monthly_income = credit.groupby('month')['amount'].sum().reset_index()
         monthly_income.columns = ['month', 'income']
-        
-        # Merge income and spending
-        monthly_data = monthly_spending.merge(monthly_income, on='month', how='left')
-        monthly_data['income'] = monthly_data['income'].fillna(monthly_data['income'].mean())
-        monthly_data['savings'] = monthly_data['income'] - monthly_data['spending']
-        
-        # Need at least 2 months of data for ML
-        if len(monthly_data) < 2:
-            # Fallback to simple average if not enough data
+
+        # Merge and compute savings
+        monthly = monthly_spending.merge(monthly_income, on='month', how='left')
+        monthly['income'] = monthly['income'].fillna(monthly['income'].mean() if monthly['income'].notna().any() else 0.0)
+        monthly['savings'] = monthly['income'] - monthly['spending']
+
+        # Need at least 2 months for a trend
+        if len(monthly) < 2:
             return self._forecast_goal_simple(goal_amount, goal_months)
-        
-        # Train Linear Regression model on spending trend
-        X_spending = monthly_data[['month_num']].values
-        y_spending = monthly_data['spending'].values
-        
-        model_spending = LinearRegression()
-        model_spending.fit(X_spending, y_spending)
-        
-        # Calculate model accuracy (R² score)
-        r2_score = model_spending.score(X_spending, y_spending)
-        
-        # Train model on savings trend (if we have income data)
-        if monthly_data['income'].notna().sum() > 0:
-            y_savings = monthly_data['savings'].values
-            model_savings = LinearRegression()
-            model_savings.fit(X_spending, y_savings)
-            savings_r2 = model_savings.score(X_spending, y_savings)
-        else:
-            model_savings = None
-            savings_r2 = 0
-        
-        # Predict future months
-        future_months = np.array(range(len(monthly_data), len(monthly_data) + goal_months)).reshape(-1, 1)
-        predicted_spending = model_spending.predict(future_months)
-        
-        if model_savings is not None:
-            predicted_savings = model_savings.predict(future_months)
-            current_monthly_savings = float(np.mean(predicted_savings))
-        else:
-            # Use income - predicted spending
-            avg_income = float(monthly_data['income'].mean())
-            avg_predicted_spending = float(predicted_spending.mean())
-            current_monthly_savings = avg_income - avg_predicted_spending
-            predicted_savings = [avg_income - spend for spend in predicted_spending]
-        
-        # ML-based projection
-        projected_total_savings = float(sum(predicted_savings))
-        will_reach_goal = bool(projected_total_savings >= goal_amount)
-        shortfall = float(max(0, goal_amount - projected_total_savings))
-        
-        # Current metrics
-        monthly_income = float(monthly_data['income'].mean())
-        monthly_spending_avg = float(monthly_data['spending'].mean())
-        
-        # What's needed for goal
-        required_monthly_savings = goal_amount / goal_months
+
+        # Fit savings trend (simple, demo-friendly)
+        X = monthly[['month_num']].values
+        y_spending = monthly['spending'].values
+        y_savings = monthly['savings'].values
+
+        model_spending = LinearRegression().fit(X, y_spending)
+        r2_score = float(model_spending.score(X, y_spending))
+
+        model_savings = LinearRegression().fit(X, y_savings)
+
+        future = np.arange(len(monthly), len(monthly) + int(goal_months)).reshape(-1, 1)
+        predicted_savings = model_savings.predict(future)
+
+        current_monthly_savings = float(np.mean(predicted_savings))
+        projected_total_savings = float(np.sum(predicted_savings))
+
+        will_reach_goal = bool(projected_total_savings >= float(goal_amount))
+        shortfall = float(max(0.0, float(goal_amount) - projected_total_savings))
+
+        monthly_income_val = float(monthly['income'].mean())
+        monthly_spending_avg = float(monthly['spending'].mean())
+
+        required_monthly_savings = float(goal_amount) / max(1, int(goal_months))
         monthly_gap = required_monthly_savings - current_monthly_savings
-        
-        # Generate smart recommendations
+
+        # Recommendations
         recommendations = []
-        total_potential_savings = 0
-        
-        # Recommendation 1: Spending Habits
+        total_potential_savings = 0.0
+
         spending_data = self.detect_spending_habits()
         if spending_data and spending_data['monthly_average'] > 40:
-            reduction = 0.5  # 50% reduction
-            saving = spending_data['monthly_average'] * reduction
+            saving = float(spending_data['monthly_average'] * 0.5)
             recommendations.append({
                 'action': f"Reduce {spending_data['habit_type']} visits by 50%",
-                'monthly_savings': float(saving),
+                'monthly_savings': saving,
                 'annual_savings': float(saving * 12),
                 'impact_percentage': float(saving / monthly_gap * 100) if monthly_gap > 0 else 100,
-                'difficulty': 'Easy'
+                'difficulty': 'Easy',
             })
             total_potential_savings += saving
-        
-        # Recommendation 2: Subscriptions
+
         subs_data = self.detect_subscriptions()
-        if subs_data and subs_data['unused_monthly_waste'] > 0:
-            saving = subs_data['unused_monthly_waste']
+        if subs_data.get('unused_monthly_waste', 0) > 0:
+            saving = float(subs_data['unused_monthly_waste'])
             recommendations.append({
-                'action': f"Cancel {subs_data['unused_count']} unused subscription(s)",
-                'monthly_savings': float(saving),
+                'action': f"Review/cancel {subs_data['unused_count']} subscription(s)",
+                'monthly_savings': saving,
                 'annual_savings': float(saving * 12),
                 'impact_percentage': float(saving / monthly_gap * 100) if monthly_gap > 0 else 100,
-                'difficulty': 'Easy'
+                'difficulty': 'Easy',
             })
             total_potential_savings += saving
-        
-        # Recommendation 3: Dining
-        categories = self.get_spending_by_category()
-        dining_cat = next((c for c in categories if c['category'] == 'Dining Out'), None)
+
+        dining_cat = next((c for c in self.get_spending_by_category() if c['category'] == 'Dining Out'), None)
         if dining_cat:
-            days = (self.df['date'].max() - self.df['date'].min()).days
-            months = max(1, days / 30.0)
-            monthly_dining = dining_cat['amount'] / months
+            days = int((df['date'].max() - df['date'].min()).days)
+            months = max(1.0, days / 30.0)
+            monthly_dining = float(dining_cat['amount'] / months)
             if monthly_dining > 150:
-                reduction = 0.25  # 25% reduction
-                saving = monthly_dining * reduction
+                saving = float(monthly_dining * 0.25)
                 recommendations.append({
                     'action': 'Cook at home more (reduce dining out 25%)',
-                    'monthly_savings': float(saving),
+                    'monthly_savings': saving,
                     'annual_savings': float(saving * 12),
                     'impact_percentage': float(saving / monthly_gap * 100) if monthly_gap > 0 else 100,
-                    'difficulty': 'Medium'
+                    'difficulty': 'Medium',
                 })
                 total_potential_savings += saving
-        
-        # Calculate success probability with ML predictions
+
+        # Projection with changes
         new_monthly_savings = current_monthly_savings + total_potential_savings
-        success_probability = min(100, (new_monthly_savings / required_monthly_savings * 100)) if required_monthly_savings > 0 else 100
-        
-        # New ML-based projection with recommendations
-        new_predicted_savings = [s + total_potential_savings for s in predicted_savings]
-        new_projected_total = float(sum(new_predicted_savings))
-        will_reach_with_changes = bool(new_projected_total >= goal_amount)
-        
-        # Determine confidence level based on R² score
+        success_probability = (
+            min(100.0, (new_monthly_savings / required_monthly_savings) * 100)
+            if required_monthly_savings > 0 else 100.0
+        )
+
+        new_projected_total = float(np.sum(predicted_savings + total_potential_savings))
+        will_reach_with_changes = bool(new_projected_total >= float(goal_amount))
+
+        # Confidence label from spending fit quality
         if r2_score >= 0.8:
-            confidence = 'high'
-            confidence_pct = 90
+            confidence, confidence_pct = 'high', 90
         elif r2_score >= 0.6:
-            confidence = 'medium'
-            confidence_pct = 75
+            confidence, confidence_pct = 'medium', 75
         else:
-            confidence = 'low'
-            confidence_pct = 60
-        
+            confidence, confidence_pct = 'low', 60
+
         return {
             'goal_amount': float(goal_amount),
             'goal_months': int(goal_months),
-            'current_monthly_income': float(monthly_income),
+            'current_monthly_income': float(monthly_income_val),
             'current_monthly_spending': float(monthly_spending_avg),
             'current_monthly_savings': float(current_monthly_savings),
             'required_monthly_savings': float(required_monthly_savings),
@@ -476,37 +573,65 @@ class FinancialAnalyzer:
             'confidence_level': confidence,
             'confidence_percentage': confidence_pct,
             'insight': self._generate_goal_insight_ml(
-                current_monthly_savings, 
-                required_monthly_savings, 
+                current_monthly_savings,
+                required_monthly_savings,
                 total_potential_savings,
                 will_reach_goal,
                 will_reach_with_changes,
                 confidence,
-                r2_score
-            )
+                r2_score,
+            ),
         }
-    
+
     def _forecast_goal_simple(self, goal_amount, goal_months):
         """
         Fallback to simple averaging if not enough data for ML
         """
-        days = (self.df['date'].max() - self.df['date'].min()).days
-        months = max(1, days / 30.0)
-        
-        total_income = self.df[self.df['type'] == 'credit']['amount'].sum()
-        total_spending = abs(self.df[self.df['type'] == 'debit']['amount'].sum())
-        
+        df = self.df
+        if df.empty:
+            required = float(goal_amount) / max(1, int(goal_months))
+            return {
+                'goal_amount': float(goal_amount),
+                'goal_months': int(goal_months),
+                'current_monthly_income': 0.0,
+                'current_monthly_spending': 0.0,
+                'current_monthly_savings': 0.0,
+                'required_monthly_savings': required,
+                'monthly_gap': required,
+                'projected_total': 0.0,
+                'shortfall': float(goal_amount),
+                'will_reach_goal': False,
+                'recommendations': [],
+                'total_potential_savings': 0.0,
+                'new_monthly_savings': 0.0,
+                'new_projected_total': 0.0,
+                'will_reach_with_changes': False,
+                'success_probability': 50.0,
+                'ml_model': 'Simple average (insufficient data for ML)',
+                'model_accuracy': 0.0,
+                'confidence_level': 'low',
+                'confidence_percentage': 50,
+                'insight': 'Not enough historical data for ML prediction. Showing simple average.',
+            }
+
+        # Compute averages over the observed window
+        days = int((df['date'].max() - df['date'].min()).days)
+        months = max(1.0, days / 30.0)
+
+        total_income = float(df.loc[df['type'] == 'credit', 'amount'].sum())
+        total_spending = float(df.loc[df['type'] == 'debit', 'amount'].abs().sum())
+
         monthly_income = total_income / months
         monthly_spending = total_spending / months
         current_monthly_savings = monthly_income - monthly_spending
-        
-        required_monthly_savings = goal_amount / goal_months
+
+        required_monthly_savings = float(goal_amount) / max(1, int(goal_months))
         monthly_gap = required_monthly_savings - current_monthly_savings
-        
-        projected_total_savings = current_monthly_savings * goal_months
-        will_reach_goal = bool(projected_total_savings >= goal_amount)
-        shortfall = float(max(0, goal_amount - projected_total_savings))
-        
+
+        projected_total_savings = current_monthly_savings * int(goal_months)
+        will_reach_goal = bool(projected_total_savings >= float(goal_amount))
+        shortfall = float(max(0.0, float(goal_amount) - projected_total_savings))
+
         return {
             'goal_amount': float(goal_amount),
             'goal_months': int(goal_months),
@@ -519,7 +644,7 @@ class FinancialAnalyzer:
             'shortfall': float(shortfall),
             'will_reach_goal': will_reach_goal,
             'recommendations': [],
-            'total_potential_savings': 0,
+            'total_potential_savings': 0.0,
             'new_monthly_savings': float(current_monthly_savings),
             'new_projected_total': float(projected_total_savings),
             'will_reach_with_changes': will_reach_goal,
@@ -528,45 +653,46 @@ class FinancialAnalyzer:
             'model_accuracy': 0.0,
             'confidence_level': 'low',
             'confidence_percentage': 50,
-            'insight': 'Not enough historical data for ML prediction. Showing simple average.'
+            'insight': 'Not enough historical data for ML prediction. Showing simple average.',
         }
-    
+
     def _generate_goal_insight_ml(self, current, required, potential, reach_now, reach_with_changes, confidence, r2_score):
         """Generate human-readable insight for ML-based goal forecast"""
         gap = required - current
-        
         confidence_text = f"ML model shows {confidence} confidence ({r2_score*100:.0f}% accuracy). "
-        
+
         if reach_now:
-            return confidence_text + f"Great news! You're already on track to reach your goal. Keep it up!"
-        elif reach_with_changes:
+            return confidence_text + "Great news! You're already on track to reach your goal. Keep it up!"
+        if reach_with_changes:
             percent = (potential / gap * 100) if gap > 0 else 0
-            return confidence_text + f"You're currently ${gap:.2f}/month short of your goal. " + \
-                   f"Our AI recommendations would save ${potential:.2f}/month ({percent:.0f}% of what you need), " + \
-                   f"putting you on track to reach your goal!"
-        else:
-            return confidence_text + f"You need to save ${required:.2f}/month but currently save ${current:.2f}/month. " + \
-                   f"Our AI recommendations could save ${potential:.2f}/month, getting you closer to your goal!"
-    
-    
+            return (
+                confidence_text +
+                f"You're currently ${gap:.2f}/month short of your goal. "
+                f"Our AI recommendations would save ${potential:.2f}/month ({percent:.0f}% of what you need), "
+                "putting you on track to reach your goal!"
+            )
+        return (
+            confidence_text +
+            f"You need to save ${required:.2f}/month but currently save ${current:.2f}/month. "
+            f"Our AI recommendations could save ${potential:.2f}/month, getting you closer to your goal!"
+        )
+
     def get_timeline_data(self):
         """Get daily spending for timeline charts"""
-        daily = self.df[self.df['type'] == 'debit'].groupby(self.df['date'].dt.date)['amount'].sum().abs()
-        
-        return [
-            {
-                'date': str(date),
-                'amount': float(amount)
-            }
-            for date, amount in daily.items()
-        ]
-    
+        df = self.df[self.df['type'] == 'debit'].copy()
+        if df.empty:
+            return []
+
+        daily = df.groupby(df['date'].dt.date)['amount'].sum().abs()
+        return [{'date': str(d), 'amount': float(a)} for d, a in daily.items()]
+
     def get_category_trends(self):
         """Get spending trends by category over time"""
         df_debit = self.df[self.df['type'] == 'debit'].copy()
+        if df_debit.empty:
+            return []
+
         df_debit['month'] = df_debit['date'].dt.to_period('M')
-        
         monthly = df_debit.groupby(['month', 'category'])['amount'].sum().abs().reset_index()
         monthly['month'] = monthly['month'].astype(str)
-        
         return monthly.to_dict('records')
