@@ -246,7 +246,7 @@ function TimelineChart({ timeline, mode }) {
     return acc;
   }, {});
 
-  // Sort oldest → newest for correct chart ordering
+  // Sort oldest to newest for correct chart ordering
   const sorted = Object.values(aggregated).sort(
     (a, b) => new Date(a.date) - new Date(b.date)
   );
@@ -359,10 +359,20 @@ function Subscriptions({ data }) {
     );
   }
 
-  const activeCount = Math.max(0, Number(subs.total_count || subs.subscriptions.length));
-  const unusedCount = Math.max(0, Number(subs.unused_count || 0));
+  // Logic for reviewing subscriptions
+  const totalCount = Math.max(0, Number(subs.total_count || subs.subscriptions.length));
+  const reviewCount = Math.max(0, Number(subs.review_count ?? subs.unused_count ?? 0));
   const monthlyTotal = Number(subs.total_monthly_cost || 0);
-  const unusedMonthlyWaste = Number(subs.unused_monthly_waste || 0);
+  const reviewMonthly = Number(subs.review_monthly_amount ?? subs.unused_monthly_waste ?? 0);
+
+  const burdenPct = Number(subs.subscription_burden_pct ?? 0);
+  const burdenHigh = Boolean(subs.subscription_burden_high);
+
+  const burdenText =
+  Number.isFinite(burdenPct) && burdenPct > 0
+    ? `Subscriptions are ${burdenPct < 1 ? '<1' : burdenPct.toFixed(0)}% of your monthly spending${burdenHigh ? ' (high)' : ''}.`
+    : '';
+
 
   return (
     <div className="insight-card">
@@ -370,13 +380,13 @@ function Subscriptions({ data }) {
 
       <div className="subs-summary">
         <div className="subs-stat">
-          <span className="subs-count">{activeCount}</span>
+          <span className="subs-count">{totalCount}</span>
           <span className="subs-label">Active</span>
         </div>
 
         <div className="subs-stat warning">
-          <span className="subs-count">{unusedCount}</span>
-          <span className="subs-label">Unused</span>
+          <span className="subs-count">{reviewCount}</span>
+          <span className="subs-label">Needs Review</span>
         </div>
 
         <div className="subs-stat">
@@ -386,27 +396,43 @@ function Subscriptions({ data }) {
       </div>
 
       <div className="subs-list">
-        {subs.subscriptions.slice(0, 6).map((sub, i) => (
-          <div key={i} className={`sub-item ${sub.likely_unused ? 'unused' : 'active'}`}>
-            <div className="sub-left">
-              <span className="sub-name">{sub.merchant}</span>
-              {sub.last_charge_date && (
-                <span className="sub-meta">Last:  {new Date(sub.last_charge_date).toLocaleDateString()}</span>
-              )}
-              {sub.trial_to_paid && <span className="sub-meta">Trial → Paid</span>}
-            </div>
+        {subs.subscriptions.slice(0, 6).map((sub, i) => {
+          const needsReview = Boolean(sub.needs_review ?? sub.likely_unused);
+          const reasons = Array.isArray(sub.review_reasons) ? sub.review_reasons : [];
+          const reasonsText = reasons.length ? reasons.slice(0, 2).join(' • ') : '';
 
-            <div className="sub-right">
-              <span className="sub-amount">{formatCurrencyDecimal(sub.monthly_cost)}/mo</span>
-              {sub.likely_unused && <span className="sub-badge">Review</span>}
+          return (
+            <div key={i} className={`sub-item ${needsReview ? 'review' : 'active'}`}>
+              <div className="sub-left">
+                <span className="sub-name">{sub.merchant}</span>
+
+                {sub.service_type && <span className="sub-meta">{String(sub.service_type).replaceAll('_', ' ')}</span>}
+
+                {sub.last_charge_date && (
+                  <span className="sub-meta">Last: {new Date(sub.last_charge_date).toLocaleDateString()}</span>
+                )}
+
+                {reasonsText && <span className="sub-meta flagged">Flagged: {reasonsText}</span>}
+              </div>
+
+              <div className="sub-right">
+                <span className="sub-amount">{formatCurrencyDecimal(sub.monthly_cost)}/mo</span>
+                {needsReview && <span className="sub-badge">Review</span>}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      {unusedMonthlyWaste > 0 && (
+      {(reviewMonthly > 0 || burdenText) && (
         <div className="waste-callout">
-          💡 Review unused subscriptions to save <strong>{formatCurrency(unusedMonthlyWaste * 12)}/year</strong>
+          {reviewMonthly > 0 && (
+            <>
+              💡 Review flagged subscriptions totaling <strong>{formatCurrency(reviewMonthly * 12)}/year</strong>
+            </>
+          )}
+          {reviewMonthly > 0 && burdenText ? <span className="callout-sep"> • </span> : null}
+          {burdenText ? <span>{burdenText}</span> : null}
         </div>
       )}
     </div>
@@ -414,6 +440,7 @@ function Subscriptions({ data }) {
 }
 
 // Goal Tracker Card
+
 function GoalTracker({ onCalculate, goalData }) {
   const [goalAmount, setGoalAmount] = useState(5000);
   const [goalMonths, setGoalMonths] = useState(12);

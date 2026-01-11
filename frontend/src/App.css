@@ -1013,3 +1013,31 @@ body {
 .chart-card .recharts-cartesian-grid line {
   stroke: rgba(255, 255, 255, 0.08);
 }
+
+
+/* ========== Time Range Selector (This Month / Last Month / YTD) ========== */
+.mode-toggle .btn-small.active {
+  background: rgba(34, 211, 238, 0.22);
+  border-color: rgba(34, 211, 238, 0.55);
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.10);
+}
+
+/* ========== Subscription Review Flags ========== */
+.sub-item.review {
+  background: rgba(245, 158, 11, 0.12);
+  border-left: 3px solid var(--warning);
+}
+
+.sub-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.sub-meta.flagged {
+  color: #fde68a;
+}
+
+.waste-callout .callout-sep {
+  opacity: 0.8;
+  margin: 0 6px;
+}
