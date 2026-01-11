@@ -3,7 +3,7 @@
 :root {
   /* Backgrounds */
   --bg-primary: #2b2c77;   
-  --bg-card: #292147;      
+  --bg-card: #282955;      
   --bg-hover: #0f1736;     
 
   /* Text */
@@ -38,6 +38,173 @@
   --font-sans: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+
+/* ========== Login Page ========== */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #1a4e80 0%, #0d9488 50%, #14b8a6 100%);
+}
+
+.login-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 440px;
+  overflow: hidden;
+}
+
+.login-header {
+  background: linear-gradient(135deg, var(--accent-dark), var(--accent));
+  color: white;
+  padding: 32px 32px 24px;
+  text-align: center;
+}
+
+.login-header h1 {
+  font-size: 1.75rem;
+  margin-bottom: 8px;
+}
+
+.login-header p {
+  opacity: 0.9;
+  font-size: 0.95rem;
+}
+
+.login-form {
+  padding: 32px;
+}
+
+.login-form h2 {
+  font-size: 1.25rem;
+  margin-bottom: 24px;
+  text-align: center;
+  color: var(--text);
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+}
+
+.form-group input:disabled {
+  background: var(--bg);
+  cursor: not-allowed;
+}
+
+.btn-auth {
+  width: 100%;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn-auth:hover:not(:disabled) {
+  background: var(--accent-dark);
+}
+
+.btn-auth:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn-auth:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.auth-error {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  margin-bottom: 20px;
+  border: 1px solid #fecaca;
+}
+
+.auth-message {
+  background: #f0fdf4;
+  color: #16a34a;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  margin-bottom: 20px;
+  border: 1px solid #bbf7d0;
+}
+
+.login-footer {
+  text-align: center;
+  padding: 0 32px 24px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  font-size: inherit;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}
+
+.login-features {
+  background: var(--bg);
+  padding: 24px 32px;
+  border-top: 1px solid var(--border);
+}
+
+.login-features h3 {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.login-features ul {
+  list-style: none;
+}
+
+.login-features li {
+  font-size: 0.875rem;
+  padding: 6px 0;
+  color: var(--text);
+}
 
 /* ========== Reset & Base ========== */
 *, *::before, *::after {
@@ -507,7 +674,7 @@ body {
   padding: 12px;
   border-radius: var(--radius-sm);
   font-size: 13px;
-  color: #92400e;
+  color: #a8521d;
 }
 
 /* ========== Anomalies ========== */
