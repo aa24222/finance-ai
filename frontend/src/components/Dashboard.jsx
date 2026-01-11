@@ -804,7 +804,7 @@ export default function Dashboard() {
       )}
 
       <footer className="footer">
-        <p>🔒 Your data stays local • No cloud storage • Privacy-first</p>
+        <p>🔒 Your data is encrypted • Secure login • Never shared with third parties</p>
       </footer>
     </div>
   );

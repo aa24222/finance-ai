@@ -3,7 +3,7 @@
 :root {
   /* Backgrounds */
   --bg-primary: #2b4c77;   
-  --bg-card: #202c5f;      
+  --bg-card: #20415f;      
   --bg-hover: #0f1736;     
 
   /* Text */
@@ -278,9 +278,9 @@ body {
 }
 
 .header-content h1 {
-  font-family: 'DM Sans', system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 28px;
+  font-family: 'Urbanist', sans-serif;
+  font-weight: 300;
+  font-size: 34px;
   color: var(--text-primary);
   margin-bottom: 4px;
 }
