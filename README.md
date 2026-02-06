@@ -23,10 +23,6 @@ An AI-powered financial coach that transforms transaction data into actionable i
 | AI | Claude API (Anthropic) |
 | Hosting | Vercel, Render |
 
-## Demo Video
-
-📺 **YouTube:** https://youtu.be/tu1B2fbCvTg
-
 ## Documentation
 
 See [DESIGN_DOC.md](./DESIGN_DOC.md) for detailed architecture and implementation.
