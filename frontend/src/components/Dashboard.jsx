@@ -146,7 +146,7 @@ function SummaryCards({ stats }) {
     { label: 'Total Income', value: formatCurrency(stats.total_income), icon: '💰', color: 'green' },
     { label: 'Total Spending', value: formatCurrency(stats.total_spending), icon: '💸', color: 'red' },
     { label: 'Net Balance', value: formatCurrency(stats.net_balance), icon: '📊', color: Number(stats.net_balance) >= 0 ? 'green' : 'red' },
-    { label: 'Monthly Avg', value: formatCurrency(stats.avg_monthly_spending), icon: '📅', color: 'blue' }
+    { label: 'Monthly Avg Spending', value: formatCurrency(stats.avg_monthly_spending), icon: '📅', color: 'blue' }
   ];
 
   return (

@@ -115,9 +115,20 @@ def get_mode_from_request():
 def add_security_headers(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'DENY'
-    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Strict-Transport-Security'] = 'max-age=63072000; includeSubDomains; preload'
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com; "
+        "connect-src 'self' https://*.supabase.co https://api.anthropic.com; "
+        "img-src 'self' data: https:; "
+        "frame-ancestors 'none'"
+    )
+    response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=(), payment=()'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['X-Permitted-Cross-Domain-Policies'] = 'none'
     return response
-
 
 # ========== CSV Upload Endpoints ==========
 @app.route('/api/data/upload', methods=['POST'])
